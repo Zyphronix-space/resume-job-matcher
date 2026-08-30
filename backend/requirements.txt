@@ -3,3 +3,7 @@ uvicorn[standard]
 sentence-transformers
 pdfplumber
 python-multipart
+sqlalchemy
+httpx
+pyjwt
+email-validator
