@@ -7,7 +7,8 @@ Four things live here:
   - /analyze: the original resume <-> single job description analyzer
     (semantic similarity + explainable skill matching).
   - /jobs*: browsing and matching internship postings from a JobProvider
-    (see job_sources/), using the exact same analysis pipeline per posting.
+    (see job_source_base.py / job_source_provider.py), using the exact same
+    analysis pipeline per posting.
   - /saved-jobs, /applications, /preferences, /history (routes_user_data.py):
     CRUD against the SQLite database (database.py), scoped per signed-in
     user — this is what the frontend used to keep in localStorage.
@@ -22,6 +23,7 @@ Run with:
     uvicorn main:app --reload
 """
 
+import os
 from dataclasses import asdict
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
@@ -33,8 +35,8 @@ from auth import get_current_user
 from database import Base, engine
 from job_matcher import match_jobs, match_single
 from job_models import JobDetailResponse, JobMatchResponse, JobSearchResponse
-from job_sources.base import JobSearchFilters
-from job_sources.provider import get_active_provider
+from job_source_base import JobSearchFilters
+from job_source_provider import get_active_provider
 from resume_analyzer import extract_resume_profile, extract_text_from_pdf
 from routes_admin import router as admin_router
 from routes_auth import router as auth_router
@@ -44,9 +46,13 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Resume Match API")
 
+# Local dev origin is always allowed; production frontend origin(s) come
+# from ALLOWED_ORIGINS (comma-separated) so the deployed Static Web App URL
+# doesn't need to be hardcoded here.
+_extra_origins = [o.strip() for o in os.environ.get("ALLOWED_ORIGINS", "").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5174"],
+    allow_origins=["http://localhost:5174", *_extra_origins],
     allow_methods=["*"],
     allow_headers=["*"],
 )

@@ -19,7 +19,7 @@ import re
 
 import httpx
 
-from .base import JobPosting, JobProvider, JobSearchFilters
+from job_source_base import JobPosting, JobProvider, JobSearchFilters
 
 MUSE_BASE_URL = "https://www.themuse.com/api/public/jobs"
 MUSE_API_KEY = os.environ.get("MUSE_API_KEY")

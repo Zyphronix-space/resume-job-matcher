@@ -3,8 +3,10 @@ __pycache__/
 .venv/
 venv/
 *.db
+*.zip
 
 node_modules/
 dist/
 
 .env
+.env.production

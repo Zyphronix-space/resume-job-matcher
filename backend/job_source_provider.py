@@ -14,13 +14,19 @@ Adding a real provider later (e.g. an official job-board API) means:
   2. Returning it from get_active_provider() instead of DemoJobProvider().
 Nothing in job_matcher.py, main.py's routes, or the frontend needs to
 change — they only depend on the JobProvider/JobPosting interface in
-job_sources/base.py.
+job_source_base.py.
+
+Note: this used to be a job_sources/ package (base.py, provider.py,
+muse_provider.py as submodules). It's flattened into top-level
+job_source_*.py modules because Azure App Service's Oryx build pipeline
+was not reliably copying the nested package directory into the temp
+directory it runs the app from, while flat top-level modules copied fine.
 """
 
 import httpx
 
-from .base import JobPosting, JobProvider, JobSearchFilters
-from .muse_provider import MuseJobProvider
+from job_source_base import JobPosting, JobProvider, JobSearchFilters
+from job_source_muse_provider import MuseJobProvider
 
 _DEMO_JOBS: list[JobPosting] = [
     JobPosting(
@@ -269,5 +275,5 @@ def get_active_provider() -> JobProvider:
     # an offline/rate-limit fallback. Swapping in a different real provider
     # later means writing one more JobProvider subclass and changing this
     # function — every route and the frontend only depend on the opaque
-    # JobProvider/JobPosting interface in job_sources/base.py.
+    # JobProvider/JobPosting interface in job_source_base.py.
     return LiveWithDemoFallbackProvider()
