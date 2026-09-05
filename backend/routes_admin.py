@@ -9,9 +9,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 import db_models
+from applications_schemas import APPLICATION_STATUSES
 from auth import get_current_admin
 from database import get_db
-from user_data_models import ApplicationOut
 
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(get_current_admin)])
 
@@ -21,12 +21,14 @@ def get_stats(db: Session = Depends(get_db)):
     return {
         "total_users": db.query(db_models.User).count(),
         "total_admins": db.query(db_models.User).filter_by(is_admin=True).count(),
-        "total_saved_jobs": db.query(db_models.SavedJob).count(),
+        "total_recruiters": db.query(db_models.User).filter_by(role="recruiter").count(),
+        "total_candidates": db.query(db_models.User).filter_by(role="candidate").count(),
+        "total_jobs": db.query(db_models.Job).count(),
+        "total_resumes": db.query(db_models.Resume).count(),
         "total_applications": db.query(db_models.Application).count(),
-        "total_history_entries": db.query(db_models.AnalysisHistoryEntry).count(),
         "applications_by_status": {
             status: db.query(db_models.Application).filter_by(status=status).count()
-            for status in ["Interested", "Preparing", "Applied", "Interview", "Rejected", "Offer"]
+            for status in APPLICATION_STATUSES
         },
     }
 
@@ -38,17 +40,19 @@ def list_users(db: Session = Depends(get_db)):
         {
             "id": u.id,
             "email": u.email,
+            "full_name": u.full_name,
+            "role": u.role,
             "is_admin": u.is_admin,
             "created_at": u.created_at,
-            "saved_jobs_count": db.query(db_models.SavedJob).filter_by(user_id=u.id).count(),
-            "applications_count": db.query(db_models.Application).filter_by(user_id=u.id).count(),
+            "jobs_count": db.query(db_models.Job).filter_by(recruiter_id=u.id).count() if u.role == "recruiter" else 0,
+            "applications_count": db.query(db_models.Application).filter_by(candidate_id=u.id).count() if u.role == "candidate" else 0,
         }
         for u in users
     ]
 
 
 @router.patch("/users/{user_id}/role")
-def set_user_role(
+def set_admin_role(
     user_id: int,
     is_admin: bool,
     admin: db_models.User = Depends(get_current_admin),
@@ -79,21 +83,32 @@ def delete_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    db.query(db_models.SavedJob).filter_by(user_id=user_id).delete()
-    db.query(db_models.AnalysisHistoryEntry).filter_by(user_id=user_id).delete()
-    db.query(db_models.Preference).filter_by(user_id=user_id).delete()
-    application_ids = [a.id for a in db.query(db_models.Application).filter_by(user_id=user_id).all()]
-    if application_ids:
-        db.query(db_models.ApplicationEvent).filter(
-            db_models.ApplicationEvent.application_id.in_(application_ids)
-        ).delete(synchronize_session=False)
-        db.query(db_models.Application).filter_by(user_id=user_id).delete()
+    # Deleted one ORM object at a time (not a bulk .delete() query) so the
+    # relationship cascades on Job/Application/Resume actually fire.
+    for job in db.query(db_models.Job).filter_by(recruiter_id=user_id).all():
+        db.delete(job)
+    for application in db.query(db_models.Application).filter_by(candidate_id=user_id).all():
+        db.delete(application)
+    for resume in db.query(db_models.Resume).filter_by(candidate_id=user_id).all():
+        db.delete(resume)
+    db.query(db_models.PasswordResetToken).filter_by(user_id=user_id).delete()
     db.delete(user)
     db.commit()
     return {"removed": True}
 
 
-@router.get("/applications", response_model=list[ApplicationOut])
+@router.get("/applications")
 def list_all_applications(db: Session = Depends(get_db)):
-    """System-wide view of every tracked application, across all users."""
-    return db.query(db_models.Application).order_by(db_models.Application.created_at.desc()).all()
+    """System-wide view of every application, across all recruiters."""
+    apps = db.query(db_models.Application).order_by(db_models.Application.created_at.desc()).all()
+    return [
+        {
+            "id": a.id,
+            "job_id": a.job_id,
+            "candidate_id": a.candidate_id,
+            "match_score": a.match_score,
+            "status": a.status,
+            "created_at": a.created_at,
+        }
+        for a in apps
+    ]

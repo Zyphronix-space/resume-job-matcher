@@ -10,7 +10,7 @@ export default function Header({ apiOnline, themeMode, onCycleTheme, user, onSig
     <header className="app-header">
       <div className="app-header-brand">
         <span className="app-header-icon"><Logo size={26} /></span>
-        <span className="app-header-title">Resume Match</span>
+        <span className="app-header-title">RecruitAI</span>
       </div>
 
       <div className="app-header-actions">
@@ -18,7 +18,12 @@ export default function Header({ apiOnline, themeMode, onCycleTheme, user, onSig
           <span className={`api-status-dot ${apiOnline === true ? 'is-online' : apiOnline === false ? 'is-offline' : ''}`} />
           {apiOnline === null ? 'Checking…' : apiOnline ? 'API Online' : 'API Offline'}
         </span>
-        {user && <span className="app-header-user" title={user.email}>{user.email}</span>}
+        {user && (
+          <span className="app-header-user" title={user.email}>
+            {user.full_name || user.email}
+            <span className="role-badge">{user.role}</span>
+          </span>
+        )}
         <button
           type="button"
           className="icon-btn"

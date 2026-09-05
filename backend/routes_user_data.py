@@ -1,11 +1,16 @@
 """
-CRUD routes for everything that used to live in the browser's localStorage:
-saved internships, tracked applications (with a status timeline),
-preferences, and resume-analysis history. All backed by the SQLite database
-in database.py, and all scoped to the signed-in user via get_current_user —
-every query below filters by user_id, so one account can never see or
-modify another's data.
+RETIRED — not imported by main.py, kept unwired rather than deleted.
+
+This was the candidate-self-service CRUD from the original "browse
+external internships on your own" product (saved jobs, ad-hoc tracked
+applications, preferences, analysis history). RecruitAI's Application
+table has a different shape (recruiter/job/candidate pipeline entity, see
+db_models.py) and the SavedJob/Preference/AnalysisHistoryEntry models this
+file depends on no longer exist. The pipeline equivalents now live in
+jobs_routes.py, resumes_routes.py, and applications_routes.py.
 """
+
+from datetime import datetime, timezone
 
 from datetime import datetime, timezone
 

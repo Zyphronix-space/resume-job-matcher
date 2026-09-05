@@ -196,3 +196,68 @@ export function ExternalLinkIcon({ size = 15, className }) {
     </svg>
   )
 }
+
+export function PeopleIcon({ size = 20, className }) {
+  return (
+    <svg width={size} height={size} className={className} {...base}>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3 20v-1.5A4.5 4.5 0 0 1 7.5 14h3A4.5 4.5 0 0 1 15 18.5V20" />
+      <path d="M16.5 8.2a3.2 3.2 0 1 1 0 6.1" />
+      <path d="M17.5 14.3A4.5 4.5 0 0 1 21 18.5V20" />
+    </svg>
+  )
+}
+
+export function ChartIcon({ size = 20, className }) {
+  return (
+    <svg width={size} height={size} className={className} {...base}>
+      <path d="M4 20V10M11 20V4M18 20v-7" />
+      <path d="M3 20h18" />
+    </svg>
+  )
+}
+
+export function ReportIcon({ size = 20, className }) {
+  return (
+    <svg width={size} height={size} className={className} {...base}>
+      <path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
+      <path d="M14 3v5h5" />
+      <path d="m9.5 15 1.7 1.7L14.5 13" />
+    </svg>
+  )
+}
+
+export function SettingsIcon({ size = 20, className }) {
+  return (
+    <svg width={size} height={size} className={className} {...base}>
+      <circle cx="12" cy="12" r="3.2" />
+      <path d="M19.4 13.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V19.5a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.1-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H4.5a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 6.15 7.4a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H10.6A1.7 1.7 0 0 0 11.63 1.5V1.4a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.09a1.7 1.7 0 0 0 1.56 1.03h.09a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.56 1.03Z" />
+    </svg>
+  )
+}
+
+export function PlusIcon({ size = 18, className }) {
+  return (
+    <svg width={size} height={size} className={className} {...base}>
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  )
+}
+
+export function UserIcon({ size = 20, className }) {
+  return (
+    <svg width={size} height={size} className={className} {...base}>
+      <circle cx="12" cy="8" r="3.6" />
+      <path d="M4.5 20v-1a5.5 5.5 0 0 1 5.5-5.5h4a5.5 5.5 0 0 1 5.5 5.5v1" />
+    </svg>
+  )
+}
+
+export function NoteIcon({ size = 16, className }) {
+  return (
+    <svg width={size} height={size} className={className} {...base}>
+      <path d="M5 4h14v13l-4 4H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z" />
+      <path d="M8 9h8M8 13h5" />
+    </svg>
+  )
+}

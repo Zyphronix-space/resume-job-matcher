@@ -1,97 +1,28 @@
-// Application tracker — backed by the FastAPI + SQLite /applications
-// endpoint. Every event recorded here corresponds to something the user
-// actually did (saved, prepared, changed status); nothing is submitted
-// anywhere by the app itself.
+import { apiJson } from './api.js'
 
-import { API_URL } from './apiUrl.js'
-import { authHeaders } from './auth.js'
+// --- Candidate side --------------------------------------------------------
+export const getCandidateMatches = () => apiJson('/candidate/matches', { fallback: 'Could not load matches' })
+export const applyToJob = (jobId, resumeId) =>
+  apiJson(`/jobs/${jobId}/apply`, { method: 'POST', body: resumeId ? { resume_id: resumeId } : {}, fallback: 'Could not submit application' })
+export const listMyApplications = () => apiJson('/candidate/applications', { fallback: 'Could not load applications' })
 
-export const STATUSES = ['Interested', 'Preparing', 'Applied', 'Interview', 'Rejected', 'Offer']
+// --- Shared ------------------------------------------------------------
+export const getApplication = (id) => apiJson(`/applications/${id}`, { fallback: 'Could not load application' })
+export const compareApplications = (ids) =>
+  apiJson(`/applications/compare?ids=${ids.map(encodeURIComponent).join(',')}`, { fallback: 'Could not load comparison' })
 
-function rowToApp(row) {
-  return {
-    id: row.id,
-    jobId: row.job_id,
-    title: row.title,
-    company: row.company,
-    location: row.location,
-    workMode: row.work_mode,
-    applicationUrl: row.application_url,
-    matchScore: row.match_score,
-    skillCoverage: row.skill_coverage,
-    resumeFilename: row.resume_filename,
-    coverLetter: row.cover_letter,
-    questions: row.questions,
-    status: row.status,
-    timeline: row.events.map((e) => ({ date: e.date, label: e.label })),
-  }
+// --- Recruiter side ------------------------------------------------------
+export function rankCandidatesForJob(jobId, { minScore, skill, status, sort } = {}) {
+  const params = new URLSearchParams()
+  if (minScore !== undefined && minScore !== null && minScore !== '') params.set('min_score', minScore)
+  if (skill) params.set('skill', skill)
+  if (status) params.set('status', status)
+  if (sort) params.set('sort', sort)
+  const qs = params.toString()
+  return apiJson(`/jobs/${jobId}/candidates${qs ? `?${qs}` : ''}`, { fallback: 'Could not load candidates' })
 }
-
-export async function loadApplications() {
-  try {
-    const res = await fetch(`${API_URL}/applications`, { headers: authHeaders() })
-    if (!res.ok) return []
-    return (await res.json()).map(rowToApp)
-  } catch {
-    return []
-  }
-}
-
-export async function ensureApplication(job, matchResult, resumeFilename) {
-  try {
-    const res = await fetch(`${API_URL}/applications`, {
-      method: 'POST',
-      headers: authHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify({
-        job_id: job.id,
-        title: job.title,
-        company: job.company,
-        location: job.location ?? null,
-        work_mode: job.work_mode ?? null,
-        application_url: job.application_url ?? null,
-        match_score: matchResult?.match_score ?? null,
-        skill_coverage: matchResult?.skill_coverage ?? null,
-        resume_filename: resumeFilename ?? null,
-      }),
-    })
-    return res.ok ? rowToApp(await res.json()) : null
-  } catch {
-    return null
-  }
-}
-
-export async function updateApplication(id, patch) {
-  const body = {}
-  if ('coverLetter' in patch) body.cover_letter = patch.coverLetter
-  if ('questions' in patch) body.questions = patch.questions
-  try {
-    await fetch(`${API_URL}/applications/${id}`, {
-      method: 'PATCH',
-      headers: authHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify(body),
-    })
-  } catch {
-    // ignore — backend unreachable
-  }
-}
-
-export async function setApplicationStatus(id, status) {
-  try {
-    await fetch(`${API_URL}/applications/${id}/status`, {
-      method: 'PATCH',
-      headers: authHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify({ status }),
-    })
-  } catch {
-    // ignore — backend unreachable
-  }
-}
-
-export async function removeApplication(id) {
-  try {
-    await fetch(`${API_URL}/applications/${id}`, { method: 'DELETE', headers: authHeaders() })
-  } catch {
-    // ignore — backend unreachable
-  }
-  return loadApplications()
-}
+export const changeApplicationStatus = (id, status) =>
+  apiJson(`/applications/${id}/status`, { method: 'PATCH', body: { status }, fallback: 'Could not update status' })
+export const addApplicationNote = (id, body) =>
+  apiJson(`/applications/${id}/notes`, { method: 'POST', body: { body }, fallback: 'Could not add note' })
+export const getShortlist = () => apiJson('/shortlist', { fallback: 'Could not load shortlist' })

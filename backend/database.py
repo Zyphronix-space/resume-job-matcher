@@ -19,6 +19,7 @@ storage) in that environment.
 """
 
 import os
+from datetime import datetime, timezone
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
@@ -36,3 +37,14 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def as_utc(dt: datetime) -> datetime:
+    """
+    SQLite drops tzinfo on round-trip: every DateTime column here is written
+    as an aware UTC datetime (see db_models.py's _now()) but comes back
+    naive after a read. Comparing that naive value against a fresh aware
+    datetime.now(timezone.utc) raises TypeError rather than just misfiring,
+    so every such comparison goes through this first.
+    """
+    return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
