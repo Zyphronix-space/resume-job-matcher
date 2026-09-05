@@ -78,6 +78,15 @@ button, input, textarea {
   color: inherit;
 }
 
+/* Router links (<Link>/<NavLink>) render as real <a> tags, unlike the
+   buttons most of this app's classes (app-nav-item, analyze-btn,
+   new-analysis-btn, etc.) were originally styled for — reset the browser's
+   default underline/link-color here rather than per class. */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
 h1, h2, h3, p {
   margin: 0;
 }
