@@ -53,3 +53,14 @@ npm run dev
 - Serving an ML pipeline behind a REST API with authenticated, per-user data
 - Integrating a real third-party data source with proper attribution
 - A full-stack app deployed and usable end-to-end, not just a notebook
+
+## Screenshots
+
+**Dashboard**
+![Home](docs/screenshots/home.png)
+
+**Analyze — resume/JD match**
+![Analyze](docs/screenshots/analyze.png)
+
+**Find Internships — live listings via The Muse API**
+![Find internships](docs/screenshots/find-internships.png)
