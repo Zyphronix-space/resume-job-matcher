@@ -15,7 +15,9 @@ export default function MatchSummary({ result, showRoadmap = false }) {
   const total = result.matched_skills.length + result.missing_skills.length
 
   const summarySentence = (() => {
-    const base = `${label} — ${result.matched_skills.length} of ${total} detected skills present`
+    // Doesn't restate the label — that's already shown right above this
+    // sentence in the score header — just the supporting detail.
+    const base = `${result.matched_skills.length} of ${total} detected skills present`
     if (result.missing_skills.length === 0) return `${base}.`
     const shown = result.missing_skills.slice(0, 3).map(skillLabel).join(', ')
     const more = result.missing_skills.length > 3 ? ', and more' : ''
@@ -31,10 +33,9 @@ export default function MatchSummary({ result, showRoadmap = false }) {
           {result.skill_coverage !== undefined && (
             <span className="match-summary-coverage">{result.skill_coverage}% skill coverage</span>
           )}
+          <p className="match-summary-sentence">{summarySentence}</p>
         </div>
       </div>
-
-      <p className="match-summary-sentence">{summarySentence}</p>
 
       <div className="match-summary-skill-lists">
         <div>

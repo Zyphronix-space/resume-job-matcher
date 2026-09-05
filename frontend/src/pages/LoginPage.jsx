@@ -4,6 +4,7 @@ import Logo from '../components/Logo.jsx'
 import GlassCard from '../components/glass/GlassCard.jsx'
 import GlassButton from '../components/glass/GlassButton.jsx'
 import GlassInput from '../components/glass/GlassInput.jsx'
+import GlassCheckbox from '../components/glass/GlassCheckbox.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 
 export default function LoginPage() {
@@ -46,10 +47,7 @@ export default function LoginPage() {
           <GlassInput label="Password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Your password" />
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 500 }}>
-              <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
-              Remember me
-            </label>
+            <GlassCheckbox checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} label="Remember me" />
             <Link to="/forgot-password" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>Forgot password?</Link>
           </div>
 

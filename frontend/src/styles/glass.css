@@ -111,6 +111,106 @@ textarea.glass-field-control { resize: vertical; min-height: 120px; }
 .glass-field-hint { font-size: 0.78rem; color: var(--text-muted); }
 .glass-field-error { font-size: 0.8rem; color: var(--danger); font-weight: 600; }
 
+/* ---------- GlassSelect ---------- */
+
+.glass-select { position: relative; }
+.glass-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-strong);
+  color: var(--text);
+  padding: 0.75rem 1rem;
+  font-size: 0.92rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.glass-select-trigger .is-placeholder { color: var(--text-muted); }
+.glass-select-trigger:hover { border-color: var(--accent); }
+.glass-select-trigger[aria-expanded="true"] { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.glass-select-chevron { flex-shrink: 0; color: var(--text-muted); transition: transform 0.18s ease; }
+.glass-select-chevron.is-open { transform: rotate(180deg); }
+
+.glass-select-menu {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0.4rem;
+  background: var(--modal-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lift);
+  backdrop-filter: blur(var(--glass-blur-lg));
+  -webkit-backdrop-filter: blur(var(--glass-blur-lg));
+  animation: glass-pop-in 0.15s ease both;
+}
+.glass-select-option {
+  width: 100%;
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.glass-select-option:hover { background: var(--accent-soft); color: var(--accent); }
+.glass-select-option.is-selected { background: var(--accent-gradient); color: var(--accent-contrast); font-weight: 700; }
+
+/* Compact inline variant — used inside candidate-card action rows rather
+   than a full block-level form field. */
+.status-select-glass { width: auto; min-width: 150px; }
+.status-select-glass .glass-select-trigger { padding: 0.5rem 0.8rem; font-size: 0.82rem; font-weight: 600; }
+.candidate-picker { max-width: 360px; margin-bottom: 1rem; }
+
+/* ---------- GlassCheckbox ---------- */
+
+.glass-checkbox { display: inline-flex; align-items: center; gap: 0.55rem; cursor: pointer; user-select: none; }
+.glass-checkbox input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.glass-checkbox-box {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  border: 1.5px solid var(--border);
+  background: var(--surface-strong);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.glass-checkbox input:checked + .glass-checkbox-box {
+  background: var(--accent-gradient);
+  border-color: transparent;
+  color: var(--accent-contrast);
+}
+.glass-checkbox input:focus-visible + .glass-checkbox-box { box-shadow: 0 0 0 3px var(--accent-soft); }
+.glass-checkbox:hover .glass-checkbox-box { border-color: var(--accent); }
+.glass-checkbox-label { font-size: 0.85rem; font-weight: 500; color: var(--text); }
+
 /* ---------- GlassBadge ---------- */
 
 .glass-badge {
@@ -387,6 +487,27 @@ textarea.glass-field-control { resize: vertical; min-height: 120px; }
 .glass-empty-state-title { font-size: 1.05rem; font-weight: 700; }
 .glass-empty-state-subtitle { color: var(--text-secondary); font-size: 0.88rem; max-width: 40ch; }
 
+/* ---------- Pipeline funnel (segmented bar) ---------- */
+
+.pipeline-funnel-bar {
+  display: flex;
+  height: 14px;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  margin-bottom: 1rem;
+}
+.pipeline-funnel-segment { transition: flex-basis 0.3s ease; }
+.pipeline-funnel-segment:nth-child(1) { background: linear-gradient(90deg, var(--accent-violet), var(--accent)); }
+.pipeline-funnel-segment:nth-child(2) { background: var(--accent); }
+.pipeline-funnel-segment:nth-child(3) { background: var(--accent-blue); }
+.pipeline-funnel-segment:nth-child(4) { background: var(--success); }
+.pipeline-funnel-segment.is-empty { background: none; }
+.pipeline-funnel-legend { display: flex; flex-wrap: wrap; gap: 0.9rem; font-size: 0.78rem; color: var(--text-secondary); }
+.pipeline-funnel-legend-item { display: inline-flex; align-items: center; gap: 0.4rem; }
+.pipeline-funnel-legend-dot { width: 9px; height: 9px; border-radius: 50%; }
+
 /* ---------- GlassSidebar ---------- */
 
 .glass-shell { display: flex; min-height: 100vh; }
@@ -417,9 +538,14 @@ textarea.glass-field-control { resize: vertical; min-height: 120px; }
   gap: 0.8rem;
   padding: 0.68rem 0.8rem;
   border-radius: var(--radius-sm);
+  background: none;
+  border: none;
   color: var(--text-secondary);
+  font: inherit;
   font-weight: 600;
   font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
 .glass-sidebar-link:hover { background: var(--accent-soft); color: var(--accent); }
@@ -469,3 +595,72 @@ textarea.glass-field-control { resize: vertical; min-height: 120px; }
 @media (max-width: 900px) { .glass-navbar-wrap { top: 0; padding: 0.6rem; } }
 
 .glass-content { flex: 1; min-width: 0; padding: 0 1.4rem 3rem; }
+
+/* ---------- Command Palette ---------- */
+
+.command-palette { max-width: 560px; padding: 0.6rem; }
+.command-palette-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  border-bottom: 1px solid var(--border);
+  padding: 0.9rem 0.9rem 0.8rem;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+.command-palette-input:focus { outline: none; }
+.command-palette-list { list-style: none; margin: 0.4rem 0 0; padding: 0; max-height: 340px; overflow-y: auto; }
+.command-palette-empty { padding: 1.2rem; text-align: center; color: var(--text-muted); font-size: 0.88rem; }
+.command-palette-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.7rem 0.8rem;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+.command-palette-item.is-active { background: var(--accent-soft); color: var(--accent); }
+.command-palette-item-label { display: block; font-weight: 700; font-size: 0.92rem; }
+.command-palette-item-hint { display: block; font-size: 0.78rem; color: var(--text-muted); }
+.command-palette-footer {
+  display: flex;
+  gap: 1rem;
+  padding: 0.7rem 0.8rem 0.2rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.4rem;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+.command-palette-footer kbd {
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0.05rem 0.35rem;
+  font-size: 0.7rem;
+  margin-right: 0.2rem;
+}
+
+.command-palette-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  border-radius: var(--radius-pill);
+  padding: 0.5rem 0.9rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.command-palette-trigger kbd {
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0.05rem 0.35rem;
+  font-size: 0.7rem;
+}

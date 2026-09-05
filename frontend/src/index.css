@@ -134,3 +134,23 @@ h1, h2, h3, p {
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
 }
+
+/* ============================================================
+   Scrollbars — thin, translucent glass thumb instead of the
+   OS-default scrollbar (which otherwise clashes hard with the dark
+   theme, arrow buttons included).
+   ============================================================ */
+
+html { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background-color: var(--text-muted);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover { background-color: var(--accent); }
+*::-webkit-scrollbar-button { width: 0; height: 0; display: none; }
+*::-webkit-scrollbar-corner { background: transparent; }

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { PlusIcon } from './icons.jsx'
 import GlassInput from './glass/GlassInput.jsx'
+import GlassSelect from './glass/GlassSelect.jsx'
 import GlassButton from './glass/GlassButton.jsx'
 import { skillLabel } from '../utils/skillLabel.js'
 
@@ -52,6 +53,7 @@ export default function JobForm({ initial, onSubmit, onCancel, submitLabel = 'Sa
   const [saving, setSaving] = useState(false)
 
   const set = (field) => (e) => setJob((j) => ({ ...j, [field]: e.target.value }))
+  const setVal = (field) => (value) => setJob((j) => ({ ...j, [field]: value }))
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -70,12 +72,14 @@ export default function JobForm({ initial, onSubmit, onCancel, submitLabel = 'Sa
     <form onSubmit={handleSubmit} className="form-grid cols-2">
       <GlassInput label="Title" required value={job.title} onChange={set('title')} placeholder="e.g. Backend Engineer Intern" />
       <GlassInput label="Location" value={job.location} onChange={set('location')} placeholder="e.g. Colombo, Sri Lanka or Remote" />
-      <GlassInput as="select" label="Employment type" value={job.employment_type} onChange={set('employment_type')}>
-        {EMPLOYMENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-      </GlassInput>
-      <GlassInput as="select" label="Status" value={job.status} onChange={set('status')}>
-        {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-      </GlassInput>
+      <GlassSelect
+        label="Employment type" value={job.employment_type} onChange={setVal('employment_type')}
+        options={EMPLOYMENT_TYPES.map((t) => ({ value: t, label: t }))}
+      />
+      <GlassSelect
+        label="Status" value={job.status} onChange={setVal('status')}
+        options={STATUSES.map((s) => ({ value: s, label: s }))}
+      />
       <GlassInput label="Experience" value={job.experience} onChange={set('experience')} placeholder="e.g. 0-1 years" />
       <GlassInput label="Education" value={job.education} onChange={set('education')} placeholder="e.g. Pursuing BSc in CS or related" />
 

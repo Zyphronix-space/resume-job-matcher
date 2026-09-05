@@ -227,11 +227,18 @@ export function ReportIcon({ size = 20, className }) {
   )
 }
 
+// A "sliders" motif (three tracks, each with an offset toggle knob) rather
+// than a literal gear — simpler to render cleanly at small sizes and
+// consistent with the rest of this set's plain geometric strokes.
 export function SettingsIcon({ size = 20, className }) {
   return (
     <svg width={size} height={size} className={className} {...base}>
-      <circle cx="12" cy="12" r="3.2" />
-      <path d="M19.4 13.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V19.5a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.1-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H4.5a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 6.15 7.4a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H10.6A1.7 1.7 0 0 0 11.63 1.5V1.4a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.09a1.7 1.7 0 0 0 1.56 1.03h.09a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.56 1.03Z" />
+      <path d="M4 6h4M12 6h8" />
+      <circle cx="9" cy="6" r="1.8" fill="currentColor" stroke="none" />
+      <path d="M4 12h9M17 12h3" />
+      <circle cx="14" cy="12" r="1.8" fill="currentColor" stroke="none" />
+      <path d="M4 18h5M13 18h7" />
+      <circle cx="10.5" cy="18" r="1.8" fill="currentColor" stroke="none" />
     </svg>
   )
 }
@@ -249,6 +256,18 @@ export function UserIcon({ size = 20, className }) {
     <svg width={size} height={size} className={className} {...base}>
       <circle cx="12" cy="8" r="3.6" />
       <path d="M4.5 20v-1a5.5 5.5 0 0 1 5.5-5.5h4a5.5 5.5 0 0 1 5.5 5.5v1" />
+    </svg>
+  )
+}
+
+export function CommandIcon({ size = 18, className }) {
+  return (
+    <svg width={size} height={size} className={className} {...base}>
+      <path d="M9 4.5A2.5 2.5 0 1 0 6.5 7H9V4.5Z" />
+      <path d="M15 4.5A2.5 2.5 0 1 1 17.5 7H15V4.5Z" />
+      <path d="M9 19.5A2.5 2.5 0 1 1 6.5 17H9v2.5Z" />
+      <path d="M15 19.5A2.5 2.5 0 1 0 17.5 17H15v2.5Z" />
+      <rect x="9" y="7" width="6" height="10" />
     </svg>
   )
 }

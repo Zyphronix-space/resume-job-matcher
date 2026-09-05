@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import GlassCard from '../../components/glass/GlassCard.jsx'
 import GlassEmptyState from '../../components/glass/GlassEmptyState.jsx'
+import PipelineFunnel from '../../components/PipelineFunnel.jsx'
 import { skillLabel } from '../../utils/skillLabel.js'
 import { getAnalyticsOverview } from '../../utils/analytics.js'
 
@@ -70,7 +71,8 @@ export default function AnalyticsPage() {
       </GlassCard>
 
       <GlassCard title="Hiring pipeline" style={{ marginTop: '1.2rem' }}>
-        <div className="pipeline-board">
+        <PipelineFunnel pipeline={overview.pipeline} />
+        <div className="pipeline-board" style={{ marginTop: '1rem' }}>
           {Object.entries(overview.pipeline).map(([stage, count]) => (
             <div className="pipeline-column" key={stage}>
               <span className="pipeline-column-label">{stage}</span>

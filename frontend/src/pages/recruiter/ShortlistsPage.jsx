@@ -6,6 +6,7 @@ import GlassCandidateCard from '../../components/glass/GlassCandidateCard.jsx'
 import GlassEmptyState from '../../components/glass/GlassEmptyState.jsx'
 import { getShortlist } from '../../utils/applications.js'
 import { downloadShortlistReport } from '../../utils/analytics.js'
+import { downloadCandidatesPdf } from '../../utils/pdfReport.js'
 
 export default function ShortlistsPage() {
   const [shortlist, setShortlist] = useState(null)
@@ -36,7 +37,8 @@ export default function ShortlistsPage() {
 
       {shortlist && shortlist.length > 0 && (
         <div className="form-actions" style={{ justifyContent: 'flex-end', marginBottom: '1rem' }}>
-          <GlassButton variant="secondary" onClick={downloadShortlistReport}>Download shortlist report (CSV)</GlassButton>
+          <GlassButton variant="secondary" onClick={downloadShortlistReport}>Download CSV</GlassButton>
+          <GlassButton variant="secondary" onClick={() => downloadCandidatesPdf('Shortlist Report', shortlist)}>Download PDF</GlassButton>
         </div>
       )}
 

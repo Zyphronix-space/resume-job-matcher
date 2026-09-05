@@ -2,8 +2,9 @@ import { useCallback, useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import GlassSidebar from '../components/glass/GlassSidebar.jsx'
 import GlassNavbar from '../components/glass/GlassNavbar.jsx'
+import CommandPalette from '../components/CommandPalette.jsx'
 import {
-  BriefcaseIcon, ChartIcon, DocumentIcon, HomeIcon, LogOutIcon, MoonIcon, NoteIcon,
+  BriefcaseIcon, ChartIcon, CommandIcon, DocumentIcon, HomeIcon, LogOutIcon, MoonIcon, NoteIcon,
   PeopleIcon, ReportIcon, SearchIcon, SettingsIcon, ShieldIcon, SunIcon, SystemIcon,
   TrackIcon, UserIcon,
 } from '../components/icons.jsx'
@@ -31,11 +32,13 @@ const CANDIDATE_LINKS = [
 ]
 
 const THEME_ICONS = { light: SunIcon, dark: MoonIcon, system: SystemIcon }
+const isMac = typeof navigator !== 'undefined' && /Mac/i.test(navigator.platform)
 
 export default function AppLayout() {
   const { user, logout } = useAuth()
   const [themeMode, cycleTheme] = useTheme()
   const [apiOnline, setApiOnline] = useState(null)
+  const [paletteOpen, setPaletteOpen] = useState(false)
   const ThemeIcon = THEME_ICONS[themeMode]
 
   const checkHealth = useCallback(async () => {
@@ -53,6 +56,17 @@ export default function AppLayout() {
     return () => clearInterval(interval)
   }, [checkHealth])
 
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setPaletteOpen((o) => !o)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
   const links = user?.role === 'recruiter' ? RECRUITER_LINKS : CANDIDATE_LINKS
   const allLinks = user?.is_admin ? [...links, { to: '/admin', label: 'Admin', Icon: ShieldIcon }] : links
 
@@ -61,7 +75,7 @@ export default function AppLayout() {
       <GlassSidebar
         links={allLinks}
         footer={(
-          <button type="button" className="glass-sidebar-link" style={{ width: '100%', border: 'none', cursor: 'pointer' }} onClick={logout}>
+          <button type="button" className="glass-sidebar-link" style={{ width: '100%' }} onClick={logout}>
             <LogOutIcon size={19} />
             <span>Sign out</span>
           </button>
@@ -73,6 +87,11 @@ export default function AppLayout() {
           title={user?.full_name || user?.email}
           actions={(
             <>
+              <button type="button" className="command-palette-trigger" onClick={() => setPaletteOpen(true)}>
+                <CommandIcon size={15} />
+                Quick actions
+                <kbd>{isMac ? '⌘' : 'Ctrl'} K</kbd>
+              </button>
               <span className="api-status" title={apiOnline === null ? 'Checking API status' : apiOnline ? 'API is reachable' : 'API is unreachable'}>
                 <span className={`api-status-dot ${apiOnline === true ? 'is-online' : apiOnline === false ? 'is-offline' : ''}`} />
                 {apiOnline === null ? 'Checking…' : apiOnline ? 'API Online' : 'API Offline'}
@@ -88,6 +107,8 @@ export default function AppLayout() {
           <Outlet />
         </main>
       </div>
+
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   )
 }

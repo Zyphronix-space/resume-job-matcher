@@ -4,7 +4,9 @@ import GlassCard from '../../components/glass/GlassCard.jsx'
 import GlassButton from '../../components/glass/GlassButton.jsx'
 import GlassBadge from '../../components/glass/GlassBadge.jsx'
 import GlassInput from '../../components/glass/GlassInput.jsx'
+import GlassSelect from '../../components/glass/GlassSelect.jsx'
 import GlassCandidateCard from '../../components/glass/GlassCandidateCard.jsx'
+import GlassCheckbox from '../../components/glass/GlassCheckbox.jsx'
 import GlassEmptyState from '../../components/glass/GlassEmptyState.jsx'
 import { useToast } from '../../components/glass/GlassToast.jsx'
 import JobForm from '../../components/JobForm.jsx'
@@ -20,7 +22,7 @@ const STATUSES = ['Applied', 'Screening', 'Interview', 'Offer', 'Shortlisted', '
 function CandidateRow({ app, onStatusChange, selected, onToggleSelect }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
-      <input type="checkbox" checked={selected} onChange={() => onToggleSelect(app.id)} aria-label={`Select ${app.candidate.full_name}`} />
+      <GlassCheckbox checked={selected} onChange={() => onToggleSelect(app.id)} aria-label={`Select ${app.candidate.full_name}`} />
       <div style={{ flex: 1 }}>
         <GlassCandidateCard
           name={app.candidate.full_name}
@@ -28,9 +30,10 @@ function CandidateRow({ app, onStatusChange, selected, onToggleSelect }) {
           score={app.match_score}
           actions={(
             <>
-              <select className="status-select" value={app.status} onChange={(e) => onStatusChange(app.id, e.target.value)}>
-                {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-              </select>
+              <GlassSelect
+                className="status-select-glass" value={app.status} onChange={(status) => onStatusChange(app.id, status)}
+                options={STATUSES.map((s) => ({ value: s, label: s }))}
+              />
               <GlassButton as={Link} to={`/candidates/${app.candidate.id}`} variant="secondary" size="sm">View</GlassButton>
               <GlassButton variant="secondary" size="sm" onClick={() => onStatusChange(app.id, 'Shortlisted')}>Shortlist</GlassButton>
               <GlassButton variant="danger" size="sm" onClick={() => onStatusChange(app.id, 'Rejected')}>Reject</GlassButton>
@@ -165,15 +168,18 @@ export default function JobDetailPage() {
           <div className="form-grid cols-2" style={{ marginBottom: '1rem' }}>
             <GlassInput label="Min score" type="number" min="0" max="100" value={minScore} onChange={(e) => setMinScore(e.target.value)} />
             <GlassInput label="Skill contains" value={skillFilter} onChange={(e) => setSkillFilter(e.target.value)} placeholder="e.g. python" />
-            <GlassInput as="select" label="Status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-              <option value="">Any</option>
-              {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-            </GlassInput>
-            <GlassInput as="select" label="Sort by" value={sort} onChange={(e) => setSort(e.target.value)}>
-              <option value="best_match">Best match</option>
-              <option value="newest">Newest</option>
-              <option value="experience">Experience (skills matched)</option>
-            </GlassInput>
+            <GlassSelect
+              label="Status" value={statusFilter} onChange={setStatusFilter} placeholder="Any"
+              options={[{ value: '', label: 'Any' }, ...STATUSES.map((s) => ({ value: s, label: s }))]}
+            />
+            <GlassSelect
+              label="Sort by" value={sort} onChange={setSort}
+              options={[
+                { value: 'best_match', label: 'Best match' },
+                { value: 'newest', label: 'Newest' },
+                { value: 'experience', label: 'Experience (skills matched)' },
+              ]}
+            />
           </div>
 
           {selected.size >= 2 && (
@@ -197,7 +203,7 @@ export default function JobDetailPage() {
                       <td>{a.matched_skills.length} matched</td>
                       <td>{a.job.experience || '—'}</td>
                       <td>{a.job.education || '—'}</td>
-                      <td>{a.status}</td>
+                      <td><GlassBadge status={a.status} /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -225,12 +231,10 @@ export default function JobDetailPage() {
 
       {tab === 'AI Matches' && (
         <GlassCard>
-          <GlassInput
-            as="select" label="Candidate" style={{ maxWidth: 360, marginBottom: '1rem' }}
-            value={selectedMatchId || ''} onChange={(e) => setSelectedMatchId(e.target.value)}
-          >
-            {candidates.map((a) => <option key={a.id} value={a.id}>{a.candidate.full_name} — {Math.round(a.match_score)}%</option>)}
-          </GlassInput>
+          <GlassSelect
+            label="Candidate" className="candidate-picker" value={selectedMatchId || ''} onChange={setSelectedMatchId}
+            options={candidates.map((a) => ({ value: a.id, label: `${a.candidate.full_name} — ${Math.round(a.match_score)}%` }))}
+          />
           {selectedMatch ? <MatchSummary result={selectedMatch} /> : <GlassEmptyState title="No candidates to analyze yet" />}
         </GlassCard>
       )}

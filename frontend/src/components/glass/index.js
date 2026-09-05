@@ -1,6 +1,8 @@
 export { default as GlassCard } from './GlassCard.jsx'
 export { default as GlassButton } from './GlassButton.jsx'
 export { default as GlassInput } from './GlassInput.jsx'
+export { default as GlassSelect } from './GlassSelect.jsx'
+export { default as GlassCheckbox } from './GlassCheckbox.jsx'
 export { default as GlassBadge } from './GlassBadge.jsx'
 export { default as GlassMetric, GlassMetricGrid } from './GlassMetric.jsx'
 export { default as GlassTable } from './GlassTable.jsx'

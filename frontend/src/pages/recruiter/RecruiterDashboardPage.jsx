@@ -6,6 +6,7 @@ import GlassBadge from '../../components/glass/GlassBadge.jsx'
 import GlassEmptyState from '../../components/glass/GlassEmptyState.jsx'
 import { GlassMetricGrid } from '../../components/glass/GlassMetric.jsx'
 import GlassMetric from '../../components/glass/GlassMetric.jsx'
+import PipelineFunnel from '../../components/PipelineFunnel.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
 import { getAnalyticsOverview } from '../../utils/analytics.js'
 
@@ -37,14 +38,7 @@ export default function RecruiterDashboardPage() {
           </GlassMetricGrid>
 
           <GlassCard title="Pipeline" style={{ marginTop: '1.2rem' }}>
-            <div className="pipeline-board">
-              {Object.entries(overview.pipeline).map(([stage, count]) => (
-                <div className="pipeline-column" key={stage}>
-                  <span className="pipeline-column-label">{stage}</span>
-                  <span className="pipeline-column-value">{count}</span>
-                </div>
-              ))}
-            </div>
+            <PipelineFunnel pipeline={overview.pipeline} />
           </GlassCard>
 
           <div className="form-grid cols-2" style={{ marginTop: '1.2rem' }}>
