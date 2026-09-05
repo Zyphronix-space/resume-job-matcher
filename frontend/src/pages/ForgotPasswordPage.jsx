@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Logo from '../components/Logo.jsx'
+import GlassCard from '../components/glass/GlassCard.jsx'
+import GlassButton from '../components/glass/GlassButton.jsx'
+import GlassInput from '../components/glass/GlassInput.jsx'
 import { forgotPassword } from '../utils/auth.js'
 
 export default function ForgotPasswordPage() {
@@ -24,7 +27,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="auth-page">
-      <div className="auth-card">
+      <GlassCard className="auth-card">
         <div className="auth-brand">
           <Logo size={34} />
           <span>RecruitAI</span>
@@ -33,14 +36,11 @@ export default function ForgotPasswordPage() {
 
         {!result ? (
           <form onSubmit={handleSubmit} className="auth-form">
-            <label className="find-field">
-              <span>Email</span>
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
-            </label>
-            {error && <p className="field-error">{error}</p>}
-            <button type="submit" className="analyze-btn auth-submit-btn" disabled={loading}>
+            <GlassInput label="Email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+            {error && <p className="glass-field-error">{error}</p>}
+            <GlassButton type="submit" variant="primary" block disabled={loading}>
               {loading ? 'Please wait…' : 'Send reset link'}
-            </button>
+            </GlassButton>
           </form>
         ) : (
           <div className="auth-form">
@@ -51,18 +51,18 @@ export default function ForgotPasswordPage() {
                   No email service is configured for this project, so the link is shown here directly
                   instead of being emailed (demo mode).
                 </p>
-                <Link className="analyze-btn auth-submit-btn" to={`/reset-password?token=${result.reset_token}`}>
+                <GlassButton as={Link} variant="primary" block to={`/reset-password?token=${result.reset_token}`}>
                   Continue to reset password
-                </Link>
+                </GlassButton>
               </>
             )}
           </div>
         )}
 
         <p className="auth-switch">
-          <Link to="/login">Back to sign in</Link>
+          <Link to="/login" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>Back to sign in</Link>
         </p>
-      </div>
+      </GlassCard>
     </div>
   )
 }

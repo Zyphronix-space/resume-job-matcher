@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import EmptyState from '../../components/EmptyState.jsx'
+import GlassCard from '../../components/glass/GlassCard.jsx'
+import GlassEmptyState from '../../components/glass/GlassEmptyState.jsx'
 import { skillLabel } from '../../utils/skillLabel.js'
 import { getAnalyticsOverview } from '../../utils/analytics.js'
 
@@ -8,8 +9,8 @@ function BarRow({ label, value, max }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', marginBottom: '0.6rem' }}>
       <span style={{ width: 130, fontSize: '0.82rem', color: 'var(--text-secondary)', flexShrink: 0 }}>{label}</span>
-      <div style={{ flex: 1, background: 'var(--border)', borderRadius: 999, height: 10, overflow: 'hidden' }}>
-        <div style={{ width: `${pct}%`, background: 'var(--accent)', height: '100%', borderRadius: 999 }} />
+      <div style={{ flex: 1, background: 'var(--border)', borderRadius: 'var(--radius-pill)', height: 10, overflow: 'hidden' }}>
+        <div style={{ width: `${pct}%`, background: 'var(--accent-gradient)', height: '100%', borderRadius: 'var(--radius-pill)' }} />
       </div>
       <span style={{ width: 28, textAlign: 'right', fontSize: '0.82rem', fontWeight: 700 }}>{value}</span>
     </div>
@@ -39,32 +40,26 @@ export default function AnalyticsPage() {
       </section>
 
       <div className="form-grid cols-2">
-        <div className="panel">
-          <h2 className="panel-title">Candidate distribution</h2>
-          <p className="panel-subtitle">Applications by pipeline status</p>
+        <GlassCard title="Candidate distribution" subtitle="Applications by pipeline status">
           <div style={{ marginTop: '1rem' }}>
             {Object.entries(overview.status_distribution).map(([status, count]) => (
               <BarRow key={status} label={status} value={count} max={maxStatus} />
             ))}
           </div>
-        </div>
+        </GlassCard>
 
-        <div className="panel">
-          <h2 className="panel-title">Match score distribution</h2>
-          <p className="panel-subtitle">Every application's match score, bucketed</p>
+        <GlassCard title="Match score distribution" subtitle="Every application's match score, bucketed">
           <div style={{ marginTop: '1rem' }}>
             {overview.score_distribution.map((b) => (
               <BarRow key={b.range} label={`${b.range}%`} value={b.count} max={maxScore} />
             ))}
           </div>
-        </div>
+        </GlassCard>
       </div>
 
-      <div className="panel" style={{ marginTop: '1.2rem' }}>
-        <h2 className="panel-title">Skills demand</h2>
-        <p className="panel-subtitle">Most-requested skills across your job postings (required + preferred)</p>
+      <GlassCard title="Skills demand" subtitle="Most-requested skills across your job postings (required + preferred)" style={{ marginTop: '1.2rem' }}>
         {overview.skills_demand.length === 0 ? (
-          <EmptyState title="No skills tagged yet" subtitle="Add required/preferred skills to your jobs to see demand here." />
+          <GlassEmptyState title="No skills tagged yet" subtitle="Add required/preferred skills to your jobs to see demand here." />
         ) : (
           <div style={{ marginTop: '1rem' }}>
             {overview.skills_demand.map((s) => (
@@ -72,10 +67,9 @@ export default function AnalyticsPage() {
             ))}
           </div>
         )}
-      </div>
+      </GlassCard>
 
-      <div className="panel" style={{ marginTop: '1.2rem' }}>
-        <h2 className="panel-title">Hiring pipeline</h2>
+      <GlassCard title="Hiring pipeline" style={{ marginTop: '1.2rem' }}>
         <div className="pipeline-board">
           {Object.entries(overview.pipeline).map(([stage, count]) => (
             <div className="pipeline-column" key={stage}>
@@ -84,7 +78,7 @@ export default function AnalyticsPage() {
             </div>
           ))}
         </div>
-      </div>
+      </GlassCard>
     </>
   )
 }

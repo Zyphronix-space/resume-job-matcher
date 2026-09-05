@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
-import EmptyState from '../../components/EmptyState.jsx'
+import GlassCard from '../../components/glass/GlassCard.jsx'
+import GlassButton from '../../components/glass/GlassButton.jsx'
+import GlassEmptyState from '../../components/glass/GlassEmptyState.jsx'
 import { listMyJobs } from '../../utils/jobs.js'
 import { downloadJobReport, downloadShortlistReport } from '../../utils/analytics.js'
 
@@ -20,29 +22,28 @@ export default function ReportsPage() {
 
       {error && <p className="field-error">{error}</p>}
 
-      <div className="panel" style={{ marginBottom: '1.2rem' }}>
-        <h2 className="panel-title">Shortlist report</h2>
-        <p className="panel-subtitle">Every shortlisted candidate across all your jobs.</p>
+      <GlassCard title="Shortlist report" subtitle="Every shortlisted candidate across all your jobs." style={{ marginBottom: '1.2rem' }}>
         <div className="form-actions">
-          <button type="button" className="analyze-btn" onClick={downloadShortlistReport}>Download CSV</button>
+          <GlassButton variant="primary" onClick={downloadShortlistReport}>Download CSV</GlassButton>
         </div>
-      </div>
+      </GlassCard>
 
-      <div className="panel">
-        <h2 className="panel-title">Job matching reports</h2>
-        <p className="panel-subtitle">One report per job — every candidate, their match score, and skill breakdown. For a side-by-side candidate comparison export, use the Compare action on a job's Candidates tab.</p>
-        {jobs && jobs.length === 0 && <EmptyState title="No jobs yet" />}
+      <GlassCard
+        title="Job matching reports"
+        subtitle="One report per job — every candidate, their match score, and skill breakdown. For a side-by-side candidate comparison export, use the Compare action on a job's Candidates tab."
+      >
+        {jobs && jobs.length === 0 && <GlassEmptyState title="No jobs yet" />}
         {jobs && jobs.length > 0 && (
           <ul className="note-list">
             {jobs.map((j) => (
               <li className="note-item" key={j.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.8rem' }}>
                 <span>{j.title} — {j.applicants_count} applicant{j.applicants_count === 1 ? '' : 's'}</span>
-                <button type="button" className="new-analysis-btn" onClick={() => downloadJobReport(j.id, j.title)}>Download CSV</button>
+                <GlassButton variant="secondary" size="sm" onClick={() => downloadJobReport(j.id, j.title)}>Download CSV</GlassButton>
               </li>
             ))}
           </ul>
         )}
-      </div>
+      </GlassCard>
     </>
   )
 }

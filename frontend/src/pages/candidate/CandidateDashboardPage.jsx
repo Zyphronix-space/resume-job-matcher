@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import EmptyState from '../../components/EmptyState.jsx'
+import GlassCard from '../../components/glass/GlassCard.jsx'
+import GlassButton from '../../components/glass/GlassButton.jsx'
+import GlassBadge from '../../components/glass/GlassBadge.jsx'
+import GlassEmptyState from '../../components/glass/GlassEmptyState.jsx'
+import GlassMetric, { GlassMetricGrid } from '../../components/glass/GlassMetric.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
 import { getCandidateMatches, listMyApplications } from '../../utils/applications.js'
 
@@ -37,45 +41,44 @@ export default function CandidateDashboardPage() {
       {error && <p className="field-error">{error}</p>}
 
       {counts && (
-        <div className="stat-grid">
-          <div className="stat-tile"><span className="stat-tile-label">Applications</span><span className="stat-tile-value">{counts.total}</span></div>
-          <div className="stat-tile"><span className="stat-tile-label">Shortlisted</span><span className="stat-tile-value">{counts.shortlisted}</span></div>
-          <div className="stat-tile"><span className="stat-tile-label">Interviews</span><span className="stat-tile-value">{counts.interview}</span></div>
-          <div className="stat-tile"><span className="stat-tile-label">Offers</span><span className="stat-tile-value">{counts.offer}</span></div>
-        </div>
+        <GlassMetricGrid>
+          <GlassMetric label="Applications" value={counts.total} />
+          <GlassMetric label="Shortlisted" value={counts.shortlisted} />
+          <GlassMetric label="Interviews" value={counts.interview} />
+          <GlassMetric label="Offers" value={counts.offer} />
+        </GlassMetricGrid>
       )}
 
       <div className="form-grid cols-2" style={{ marginTop: '1.2rem' }}>
-        <div className="panel">
-          <h2 className="panel-title">Top matches</h2>
+        <GlassCard title="Top matches">
           {!matches || matches.length === 0 ? (
-            <EmptyState title="No matches yet" subtitle="Upload a resume to see how you match against open roles." action={<Link className="analyze-btn" to="/resumes">Upload resume</Link>} />
+            <GlassEmptyState title="No matches yet" subtitle="Upload a resume to see how you match against open roles." action={<GlassButton as={Link} variant="primary" size="sm" to="/resumes">Upload resume</GlassButton>} />
           ) : (
             <ul className="note-list">
               {matches.slice(0, 5).map((m) => (
-                <li className="note-item" key={m.job.id}>
-                  {m.job.title} — {Math.round(m.match_score)}% match {m.already_applied && <span className="status-pill">{m.application_status}</span>}
+                <li className="note-item" key={m.job.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.6rem' }}>
+                  <span>{m.job.title} — {Math.round(m.match_score)}% match</span>
+                  {m.already_applied && <GlassBadge status={m.application_status} />}
                 </li>
               ))}
             </ul>
           )}
-          <div className="form-actions"><Link className="new-analysis-btn" to="/matches">View all matches</Link></div>
-        </div>
+          <div className="form-actions"><GlassButton as={Link} variant="secondary" size="sm" to="/matches">View all matches</GlassButton></div>
+        </GlassCard>
 
-        <div className="panel">
-          <h2 className="panel-title">Recent applications</h2>
+        <GlassCard title="Recent applications">
           {!applications || applications.length === 0 ? (
-            <EmptyState title="No applications yet" />
+            <GlassEmptyState title="No applications yet" />
           ) : (
             <ul className="note-list">
               {applications.slice(0, 5).map((a) => (
-                <li className="note-item" key={a.id}>
-                  {a.job.title} — <span className="status-pill">{a.status}</span>
+                <li className="note-item" key={a.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  {a.job.title} <GlassBadge status={a.status} />
                 </li>
               ))}
             </ul>
           )}
-        </div>
+        </GlassCard>
       </div>
     </>
   )

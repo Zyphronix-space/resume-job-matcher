@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import Logo from '../components/Logo.jsx'
+import GlassCard from '../components/glass/GlassCard.jsx'
+import GlassButton from '../components/glass/GlassButton.jsx'
+import GlassInput from '../components/glass/GlassInput.jsx'
 import { resetPassword } from '../utils/auth.js'
 
 export default function ResetPasswordPage() {
@@ -34,7 +37,7 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="auth-page">
-      <div className="auth-card">
+      <GlassCard className="auth-card">
         <div className="auth-brand">
           <Logo size={34} />
           <span>RecruitAI</span>
@@ -45,29 +48,20 @@ export default function ResetPasswordPage() {
           <p className="form-success">Password updated — redirecting to sign in…</p>
         ) : (
           <form onSubmit={handleSubmit} className="auth-form">
-            <label className="find-field">
-              <span>Reset token</span>
-              <input required value={token} onChange={(e) => setToken(e.target.value)} placeholder="Paste your reset token" />
-            </label>
-            <label className="find-field">
-              <span>New password</span>
-              <input type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" />
-            </label>
-            <label className="find-field">
-              <span>Confirm new password</span>
-              <input type="password" required minLength={8} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
-            </label>
-            {error && <p className="field-error">{error}</p>}
-            <button type="submit" className="analyze-btn auth-submit-btn" disabled={loading}>
+            <GlassInput label="Reset token" required value={token} onChange={(e) => setToken(e.target.value)} placeholder="Paste your reset token" />
+            <GlassInput label="New password" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" />
+            <GlassInput label="Confirm new password" type="password" required minLength={8} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+            {error && <p className="glass-field-error">{error}</p>}
+            <GlassButton type="submit" variant="primary" block disabled={loading}>
               {loading ? 'Please wait…' : 'Reset password'}
-            </button>
+            </GlassButton>
           </form>
         )}
 
         <p className="auth-switch">
-          <Link to="/login">Back to sign in</Link>
+          <Link to="/login" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>Back to sign in</Link>
         </p>
-      </div>
+      </GlassCard>
     </div>
   )
 }

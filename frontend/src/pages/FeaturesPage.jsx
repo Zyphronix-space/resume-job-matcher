@@ -1,3 +1,5 @@
+import GlassCard from '../components/glass/GlassCard.jsx'
+
 const FEATURES = [
   {
     title: 'Semantic matching, not keyword spam',
@@ -30,10 +32,9 @@ export default function FeaturesPage() {
 
       <div className="feature-grid">
         {FEATURES.map((f) => (
-          <div className="panel" key={f.title}>
-            <h3>{f.title}</h3>
-            <p>{f.body}</p>
-          </div>
+          <GlassCard key={f.title} title={f.title}>
+            <p className="glass-card-subtitle">{f.body}</p>
+          </GlassCard>
         ))}
       </div>
     </>

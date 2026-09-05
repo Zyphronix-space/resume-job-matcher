@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import EmptyState from '../../components/EmptyState.jsx'
+import GlassCard from '../../components/glass/GlassCard.jsx'
+import GlassButton from '../../components/glass/GlassButton.jsx'
+import GlassBadge from '../../components/glass/GlassBadge.jsx'
+import GlassEmptyState from '../../components/glass/GlassEmptyState.jsx'
+import { GlassMetricGrid } from '../../components/glass/GlassMetric.jsx'
+import GlassMetric from '../../components/glass/GlassMetric.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
 import { getAnalyticsOverview } from '../../utils/analytics.js'
 
@@ -24,15 +29,14 @@ export default function RecruiterDashboardPage() {
 
       {overview && (
         <>
-          <div className="stat-grid">
-            <div className="stat-tile"><span className="stat-tile-label">Open Jobs</span><span className="stat-tile-value">{overview.open_jobs}</span></div>
-            <div className="stat-tile"><span className="stat-tile-label">Total Candidates</span><span className="stat-tile-value">{overview.total_candidates}</span></div>
-            <div className="stat-tile"><span className="stat-tile-label">New Applications (7d)</span><span className="stat-tile-value">{overview.new_applications}</span></div>
-            <div className="stat-tile"><span className="stat-tile-label">Shortlisted</span><span className="stat-tile-value">{overview.shortlisted_candidates}</span></div>
-          </div>
+          <GlassMetricGrid>
+            <GlassMetric label="Open Jobs" value={overview.open_jobs} />
+            <GlassMetric label="Total Candidates" value={overview.total_candidates} />
+            <GlassMetric label="New Applications (7d)" value={overview.new_applications} />
+            <GlassMetric label="Shortlisted" value={overview.shortlisted_candidates} />
+          </GlassMetricGrid>
 
-          <div className="panel" style={{ marginTop: '1.2rem' }}>
-            <h2 className="panel-title">Pipeline</h2>
+          <GlassCard title="Pipeline" style={{ marginTop: '1.2rem' }}>
             <div className="pipeline-board">
               {Object.entries(overview.pipeline).map(([stage, count]) => (
                 <div className="pipeline-column" key={stage}>
@@ -41,13 +45,12 @@ export default function RecruiterDashboardPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </GlassCard>
 
           <div className="form-grid cols-2" style={{ marginTop: '1.2rem' }}>
-            <div className="panel">
-              <h2 className="panel-title">Recent candidates</h2>
+            <GlassCard title="Recent candidates">
               {overview.recent_candidates.length === 0 ? (
-                <EmptyState title="No applications yet" subtitle="They'll show up here once candidates start applying." />
+                <GlassEmptyState title="No applications yet" subtitle="They'll show up here once candidates start applying." />
               ) : (
                 <ul className="note-list">
                   {overview.recent_candidates.map((c) => (
@@ -58,28 +61,26 @@ export default function RecruiterDashboardPage() {
                   ))}
                 </ul>
               )}
-            </div>
+            </GlassCard>
 
-            <div className="panel">
-              <h2 className="panel-title">Recent jobs</h2>
+            <GlassCard title="Recent jobs">
               {overview.recent_jobs.length === 0 ? (
-                <EmptyState title="No jobs yet" subtitle="Create your first job posting to start matching candidates." action={<Link className="analyze-btn" to="/jobs">Create a job</Link>} />
+                <GlassEmptyState title="No jobs yet" subtitle="Create your first job posting to start matching candidates." action={<GlassButton as={Link} variant="primary" size="sm" to="/jobs">Create a job</GlassButton>} />
               ) : (
                 <ul className="note-list">
                   {overview.recent_jobs.map((j) => (
-                    <li className="note-item" key={j.id}>
-                      <Link to={`/jobs/${j.id}`}>{j.title}</Link> — <span className="status-pill">{j.status}</span>
+                    <li className="note-item" key={j.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Link to={`/jobs/${j.id}`}>{j.title}</Link> <GlassBadge status={j.status} />
                     </li>
                   ))}
                 </ul>
               )}
-            </div>
+            </GlassCard>
           </div>
 
-          <div className="panel" style={{ marginTop: '1.2rem' }}>
-            <h2 className="panel-title">Top matches</h2>
+          <GlassCard title="Top matches" style={{ marginTop: '1.2rem' }}>
             {overview.top_matches.length === 0 ? (
-              <EmptyState title="No matches yet" />
+              <GlassEmptyState title="No matches yet" />
             ) : (
               <ul className="note-list">
                 {overview.top_matches.map((m) => (
@@ -90,7 +91,7 @@ export default function RecruiterDashboardPage() {
                 ))}
               </ul>
             )}
-          </div>
+          </GlassCard>
         </>
       )}
     </>

@@ -1,9 +1,14 @@
 import { useState } from 'react'
+import GlassCard from '../components/glass/GlassCard.jsx'
+import GlassButton from '../components/glass/GlassButton.jsx'
+import GlassInput from '../components/glass/GlassInput.jsx'
+import { useToast } from '../components/glass/GlassToast.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { changePassword, updateProfile } from '../utils/auth.js'
 
 export default function SettingsPage() {
   const { user, updateUser } = useAuth()
+  const showToast = useToast()
 
   const [fullName, setFullName] = useState(user.full_name || '')
   const [phone, setPhone] = useState(user.phone || '')
@@ -12,26 +17,23 @@ export default function SettingsPage() {
   const [linkedin, setLinkedin] = useState(user.links?.linkedin || '')
   const [github, setGithub] = useState(user.links?.github || '')
   const [portfolio, setPortfolio] = useState(user.links?.portfolio || '')
-  const [profileSaved, setProfileSaved] = useState(false)
   const [profileError, setProfileError] = useState(null)
 
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmNewPassword, setConfirmNewPassword] = useState('')
-  const [passwordSaved, setPasswordSaved] = useState(false)
   const [passwordError, setPasswordError] = useState(null)
 
   const saveProfile = async (e) => {
     e.preventDefault()
     setProfileError(null)
-    setProfileSaved(false)
     try {
       const updated = await updateProfile({
         full_name: fullName, phone, location, headline,
         links: { linkedin, github, portfolio },
       })
       updateUser(updated)
-      setProfileSaved(true)
+      showToast('Profile updated', 'success')
     } catch (err) {
       setProfileError(err.message)
     }
@@ -40,14 +42,13 @@ export default function SettingsPage() {
   const savePassword = async (e) => {
     e.preventDefault()
     setPasswordError(null)
-    setPasswordSaved(false)
     if (newPassword !== confirmNewPassword) {
       setPasswordError('New passwords do not match')
       return
     }
     try {
       await changePassword(currentPassword, newPassword)
-      setPasswordSaved(true)
+      showToast('Password changed', 'success')
       setCurrentPassword('')
       setNewPassword('')
       setConfirmNewPassword('')
@@ -66,71 +67,35 @@ export default function SettingsPage() {
       </section>
 
       {user.role === 'recruiter' && (
-      <div className="panel settings-section">
-        <h2 className="panel-title">Profile</h2>
-        <p className="panel-subtitle">Signed in as {user.email} ({user.role}).</p>
-        <form onSubmit={saveProfile} className="form-grid cols-2" style={{ marginTop: '1rem' }}>
-          <label className="find-field">
-            <span>Full name</span>
-            <input value={fullName} onChange={(e) => setFullName(e.target.value)} />
-          </label>
-          <label className="find-field">
-            <span>Phone</span>
-            <input value={phone} onChange={(e) => setPhone(e.target.value)} />
-          </label>
-          <label className="find-field">
-            <span>Location</span>
-            <input value={location} onChange={(e) => setLocation(e.target.value)} />
-          </label>
-          <label className="find-field">
-            <span>Headline</span>
-            <input value={headline} onChange={(e) => setHeadline(e.target.value)} placeholder={user.role === 'recruiter' ? 'e.g. Talent Acquisition Lead' : 'e.g. Aspiring backend engineer'} />
-          </label>
-          <label className="find-field">
-            <span>LinkedIn</span>
-            <input value={linkedin} onChange={(e) => setLinkedin(e.target.value)} placeholder="https://linkedin.com/in/…" />
-          </label>
-          <label className="find-field">
-            <span>GitHub</span>
-            <input value={github} onChange={(e) => setGithub(e.target.value)} placeholder="https://github.com/…" />
-          </label>
-          <label className="find-field">
-            <span>Portfolio</span>
-            <input value={portfolio} onChange={(e) => setPortfolio(e.target.value)} placeholder="https://…" />
-          </label>
+        <GlassCard title="Profile" subtitle={`Signed in as ${user.email} (${user.role}).`} style={{ marginBottom: '1.2rem' }}>
+          <form onSubmit={saveProfile} className="form-grid cols-2" style={{ marginTop: '1rem' }}>
+            <GlassInput label="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+            <GlassInput label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            <GlassInput label="Location" value={location} onChange={(e) => setLocation(e.target.value)} />
+            <GlassInput label="Headline" value={headline} onChange={(e) => setHeadline(e.target.value)} placeholder="e.g. Talent Acquisition Lead" />
+            <GlassInput label="LinkedIn" value={linkedin} onChange={(e) => setLinkedin(e.target.value)} placeholder="https://linkedin.com/in/…" />
+            <GlassInput label="GitHub" value={github} onChange={(e) => setGithub(e.target.value)} placeholder="https://github.com/…" />
+            <GlassInput label="Portfolio" value={portfolio} onChange={(e) => setPortfolio(e.target.value)} placeholder="https://…" />
 
-          <div className="form-actions" style={{ gridColumn: '1 / -1' }}>
-            {profileError && <p className="field-error">{profileError}</p>}
-            {profileSaved && <p className="form-success">Profile updated.</p>}
-            <button type="submit" className="analyze-btn">Save profile</button>
-          </div>
-        </form>
-      </div>
+            <div className="form-actions" style={{ gridColumn: '1 / -1' }}>
+              {profileError && <p className="glass-field-error">{profileError}</p>}
+              <GlassButton type="submit" variant="primary">Save profile</GlassButton>
+            </div>
+          </form>
+        </GlassCard>
       )}
 
-      <div className="panel settings-section">
-        <h2 className="panel-title">Security</h2>
-        <p className="panel-subtitle">Change your password.</p>
+      <GlassCard title="Security" subtitle="Change your password.">
         <form onSubmit={savePassword} className="form-grid" style={{ marginTop: '1rem', maxWidth: 420 }}>
-          <label className="find-field">
-            <span>Current password</span>
-            <input type="password" required value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
-          </label>
-          <label className="find-field">
-            <span>New password</span>
-            <input type="password" required minLength={8} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
-          </label>
-          <label className="find-field">
-            <span>Confirm new password</span>
-            <input type="password" required minLength={8} value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)} />
-          </label>
+          <GlassInput label="Current password" type="password" required value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+          <GlassInput label="New password" type="password" required minLength={8} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+          <GlassInput label="Confirm new password" type="password" required minLength={8} value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)} />
           <div className="form-actions">
-            {passwordError && <p className="field-error">{passwordError}</p>}
-            {passwordSaved && <p className="form-success">Password changed.</p>}
-            <button type="submit" className="analyze-btn">Change password</button>
+            {passwordError && <p className="glass-field-error">{passwordError}</p>}
+            <GlassButton type="submit" variant="primary">Change password</GlassButton>
           </div>
         </form>
-      </div>
+      </GlassCard>
     </>
   )
 }

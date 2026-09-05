@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Logo from '../components/Logo.jsx'
+import GlassCard from '../components/glass/GlassCard.jsx'
+import GlassButton from '../components/glass/GlassButton.jsx'
+import GlassInput from '../components/glass/GlassInput.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 
 export default function LoginPage() {
@@ -31,7 +34,7 @@ export default function LoginPage() {
 
   return (
     <div className="auth-page">
-      <div className="auth-card">
+      <GlassCard className="auth-card">
         <div className="auth-brand">
           <Logo size={34} />
           <span>RecruitAI</span>
@@ -39,34 +42,28 @@ export default function LoginPage() {
         <p className="hero-subtitle auth-tagline">Sign in to your recruiter or candidate workspace.</p>
 
         <form onSubmit={handleSubmit} className="auth-form">
-          <label className="find-field">
-            <span>Email</span>
-            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
-          </label>
-          <label className="find-field">
-            <span>Password</span>
-            <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Your password" />
-          </label>
+          <GlassInput label="Email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+          <GlassInput label="Password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Your password" />
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.85rem' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 500 }}>
               <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
               Remember me
             </label>
-            <Link to="/forgot-password">Forgot password?</Link>
+            <Link to="/forgot-password" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>Forgot password?</Link>
           </div>
 
-          {error && <p className="field-error">{error}</p>}
+          {error && <p className="glass-field-error">{error}</p>}
 
-          <button type="submit" className="analyze-btn auth-submit-btn" disabled={loading}>
+          <GlassButton type="submit" variant="primary" block disabled={loading}>
             {loading ? 'Please wait…' : 'Sign in'}
-          </button>
+          </GlassButton>
         </form>
 
         <p className="auth-switch">
-          Don't have an account? <Link to="/signup">Sign up</Link>
+          Don't have an account? <Link to="/signup" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>Sign up</Link>
         </p>
-      </div>
+      </GlassCard>
     </div>
   )
 }

@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import EmptyState from '../../components/EmptyState.jsx'
+import GlassEmptyState from '../../components/glass/GlassEmptyState.jsx'
+import GlassButton from '../../components/glass/GlassButton.jsx'
+import GlassBadge from '../../components/glass/GlassBadge.jsx'
+import GlassTable from '../../components/glass/GlassTable.jsx'
+import GlassInput from '../../components/glass/GlassInput.jsx'
 import { listCandidates } from '../../utils/candidates.js'
 
 export default function CandidatesListPage() {
@@ -28,36 +32,31 @@ export default function CandidatesListPage() {
 
       {error && <p className="field-error">{error}</p>}
 
-      <label className="find-field" style={{ maxWidth: 320, marginBottom: '1rem' }}>
-        <span>Search</span>
-        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by name or email" />
-      </label>
+      <GlassInput label="Search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by name or email" style={{ maxWidth: 320, marginBottom: '1rem' }} />
 
       {candidates && candidates.length === 0 && (
-        <EmptyState title="No candidates yet" subtitle="They'll appear here once someone applies to one of your jobs." />
+        <GlassEmptyState title="No candidates yet" subtitle="They'll appear here once someone applies to one of your jobs." />
       )}
 
       {filtered.length > 0 && (
-        <div className="data-table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr><th>Name</th><th>Email</th><th>Headline</th><th>Applications</th><th>Best match</th><th>Latest status</th><th>Actions</th></tr>
-            </thead>
-            <tbody>
-              {filtered.map((c) => (
-                <tr key={c.id}>
-                  <td data-label="Name">{c.full_name}</td>
-                  <td data-label="Email">{c.email}</td>
-                  <td data-label="Headline">{c.headline || '—'}</td>
-                  <td data-label="Applications">{c.applications_count}</td>
-                  <td data-label="Best match">{Math.round(c.best_match_score)}%</td>
-                  <td data-label="Latest status"><span className="status-pill">{c.latest_status}</span></td>
-                  <td data-label="Actions"><Link className="new-analysis-btn" to={`/candidates/${c.id}`}>View</Link></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <GlassTable>
+          <thead>
+            <tr><th>Name</th><th>Email</th><th>Headline</th><th>Applications</th><th>Best match</th><th>Latest status</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            {filtered.map((c) => (
+              <tr key={c.id}>
+                <td data-label="Name">{c.full_name}</td>
+                <td data-label="Email">{c.email}</td>
+                <td data-label="Headline">{c.headline || '—'}</td>
+                <td data-label="Applications">{c.applications_count}</td>
+                <td data-label="Best match">{Math.round(c.best_match_score)}%</td>
+                <td data-label="Latest status"><GlassBadge status={c.latest_status} /></td>
+                <td data-label="Actions"><GlassButton as={Link} to={`/candidates/${c.id}`} variant="secondary" size="sm">View</GlassButton></td>
+              </tr>
+            ))}
+          </tbody>
+        </GlassTable>
       )}
     </>
   )

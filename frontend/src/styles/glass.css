@@ -1,0 +1,471 @@
+/* ============================================================
+   RecruitAI — Liquid Glass component styles
+
+   Every rule here reads color/blur/radius/shadow from the centralized
+   tokens in index.css (:root / [data-theme]) — nothing is hardcoded, so
+   retuning the palette there retunes every Glass* component at once.
+   ============================================================ */
+
+/* ---------- GlassCard ---------- */
+
+.glass-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.6rem;
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(var(--glass-blur-md));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+  isolation: isolate;
+  overflow: hidden;
+}
+.glass-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--glass-highlight), transparent);
+}
+.glass-card.is-flush { padding: 0; }
+.glass-card.is-interactive { cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
+.glass-card.is-interactive:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); border-color: var(--accent-soft); }
+
+.glass-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.8rem; margin-bottom: 1rem; }
+.glass-card-title { font-size: 1.05rem; font-weight: 700; }
+.glass-card-subtitle { margin-top: 0.3rem; color: var(--text-secondary); font-size: 0.9rem; }
+
+/* ---------- GlassButton ---------- */
+
+.glass-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-pill);
+  padding: 0.7rem 1.4rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.16s ease, box-shadow 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+  white-space: nowrap;
+}
+.glass-btn:disabled { opacity: 0.45; cursor: default; pointer-events: none; }
+.glass-btn:not(:disabled):active { transform: scale(0.97); }
+
+.glass-btn-primary {
+  background: var(--accent-gradient);
+  color: var(--accent-contrast);
+  box-shadow: 0 12px 28px var(--accent-soft);
+}
+.glass-btn-primary:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 16px 34px var(--accent-soft); }
+
+.glass-btn-secondary {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+  backdrop-filter: blur(var(--glass-blur-sm));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+}
+.glass-btn-secondary:not(:disabled):hover { border-color: var(--accent); color: var(--accent); }
+
+.glass-btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: transparent;
+}
+.glass-btn-ghost:not(:disabled):hover { background: var(--accent-soft); color: var(--accent); }
+
+.glass-btn-danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: transparent;
+}
+.glass-btn-danger:not(:disabled):hover { background: var(--danger); color: #fff; }
+
+.glass-btn-sm { padding: 0.45rem 0.9rem; font-size: 0.8rem; }
+.glass-btn-block { width: 100%; }
+.glass-btn-icon { padding: 0.6rem; border-radius: 50%; }
+
+/* ---------- GlassInput ---------- */
+
+.glass-field { display: flex; flex-direction: column; gap: 0.4rem; }
+.glass-field-label { font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); }
+.glass-field-control {
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-strong);
+  color: var(--text);
+  padding: 0.75rem 1rem;
+  font-size: 0.92rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+}
+.glass-field-control:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+textarea.glass-field-control { resize: vertical; min-height: 120px; }
+.glass-field-hint { font-size: 0.78rem; color: var(--text-muted); }
+.glass-field-error { font-size: 0.8rem; color: var(--danger); font-weight: 600; }
+
+/* ---------- GlassBadge ---------- */
+
+.glass-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.28rem 0.7rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.glass-badge-success { background: var(--success-soft); color: var(--success); }
+.glass-badge-warning { background: var(--warning-soft); color: var(--warning); }
+.glass-badge-danger { background: var(--danger-soft); color: var(--danger); }
+.glass-badge-neutral { background: var(--surface-strong); color: var(--text-secondary); border: 1px solid var(--border); }
+
+/* ---------- GlassMetric ---------- */
+
+.glass-metric-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.9rem; }
+@media (min-width: 720px) { .glass-metric-grid { grid-template-columns: repeat(4, 1fr); } }
+
+.glass-metric {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1.1rem 1.2rem;
+  backdrop-filter: blur(var(--glass-blur-md));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+.glass-metric::after {
+  content: "";
+  position: absolute;
+  top: -40%;
+  right: -20%;
+  width: 60%;
+  height: 140%;
+  background: radial-gradient(circle, var(--accent-soft), transparent 70%);
+  pointer-events: none;
+}
+.glass-metric-label { display: block; font-size: 0.74rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.glass-metric-value { display: block; font-size: 1.9rem; font-weight: 800; margin-top: 0.35rem; background: var(--accent-gradient); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.glass-metric-trend { font-size: 0.76rem; color: var(--text-muted); margin-top: 0.2rem; display: block; }
+
+/* ---------- GlassTable ---------- */
+
+.glass-table-wrap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface);
+  backdrop-filter: blur(var(--glass-blur-sm));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+}
+.glass-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.glass-table th {
+  text-align: left;
+  padding: 0.8rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--surface-strong);
+  border-bottom: 1px solid var(--border);
+}
+.glass-table td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.glass-table tr:last-child td { border-bottom: none; }
+.glass-table tbody tr { transition: background 0.15s ease; }
+.glass-table tbody tr:hover { background: var(--accent-soft); }
+
+@media (max-width: 720px) {
+  .glass-table-wrap.is-responsive thead { display: none; }
+  .glass-table-wrap.is-responsive table,
+  .glass-table-wrap.is-responsive tbody,
+  .glass-table-wrap.is-responsive tr,
+  .glass-table-wrap.is-responsive td { display: block; width: 100%; }
+  .glass-table-wrap.is-responsive { background: transparent; border: none; }
+  .glass-table-wrap.is-responsive tr {
+    margin-bottom: 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    backdrop-filter: blur(var(--glass-blur-sm));
+    -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+    padding: 0.3rem 0;
+  }
+  .glass-table-wrap.is-responsive td {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.7rem;
+    border-bottom: none;
+    padding: 0.45rem 1rem;
+  }
+  .glass-table-wrap.is-responsive td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+}
+
+/* ---------- GlassCandidateCard ---------- */
+
+.glass-candidate-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  backdrop-filter: blur(var(--glass-blur-sm));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  box-shadow: var(--shadow-soft);
+  flex-wrap: wrap;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.glass-candidate-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-lift); }
+.glass-candidate-card-identity { display: flex; align-items: center; gap: 0.8rem; min-width: 0; }
+.glass-candidate-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--accent-gradient);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+.glass-candidate-name { font-weight: 700; }
+.glass-candidate-meta { font-size: 0.8rem; color: var(--text-muted); }
+.glass-candidate-score { text-align: center; flex-shrink: 0; }
+.glass-candidate-score-value { font-size: 1.3rem; font-weight: 800; color: var(--accent); display: block; }
+.glass-candidate-score-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; }
+.glass-candidate-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+/* ---------- GlassModal ---------- */
+
+.glass-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 8, 20, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.2rem;
+  z-index: 100;
+  animation: glass-fade-in 0.18s ease both;
+}
+.glass-modal {
+  width: 100%;
+  max-width: 560px;
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--modal-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lift);
+  padding: 1.8rem;
+  backdrop-filter: blur(var(--glass-blur-lg));
+  -webkit-backdrop-filter: blur(var(--glass-blur-lg));
+  animation: glass-pop-in 0.2s ease both;
+}
+.glass-modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.2rem; }
+.glass-modal-title { font-size: 1.15rem; font-weight: 700; }
+.glass-modal-close {
+  border: none;
+  background: var(--surface);
+  color: var(--text-muted);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.glass-modal-close:hover { background: var(--danger-soft); color: var(--danger); }
+
+@keyframes glass-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes glass-pop-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+/* ---------- GlassToast ---------- */
+
+.glass-toast-viewport {
+  position: fixed;
+  bottom: 1.4rem;
+  right: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  z-index: 200;
+  max-width: min(340px, calc(100vw - 2rem));
+}
+.glass-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: var(--radius-md);
+  background: var(--modal-surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lift);
+  backdrop-filter: blur(var(--glass-blur-lg));
+  -webkit-backdrop-filter: blur(var(--glass-blur-lg));
+  animation: glass-toast-in 0.22s ease both;
+  font-size: 0.88rem;
+}
+.glass-toast-icon { flex-shrink: 0; margin-top: 0.1rem; }
+.glass-toast.is-success .glass-toast-icon { color: var(--success); }
+.glass-toast.is-error .glass-toast-icon { color: var(--danger); }
+.glass-toast.is-info .glass-toast-icon { color: var(--accent); }
+.glass-toast-close { margin-left: auto; background: none; border: none; color: var(--text-muted); cursor: pointer; flex-shrink: 0; }
+
+@keyframes glass-toast-in { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+/* ---------- GlassSkeleton ---------- */
+
+.glass-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-strong);
+  border-radius: var(--radius-sm);
+}
+.glass-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, var(--glass-highlight-soft), transparent);
+  transform: translateX(-100%);
+  animation: glass-shimmer 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) { .glass-skeleton::after { animation: none; } }
+@keyframes glass-shimmer { to { transform: translateX(100%); } }
+
+.glass-skeleton-text { height: 0.9em; margin: 0.3em 0; border-radius: 6px; }
+.glass-skeleton-block { border-radius: var(--radius-md); }
+
+/* ---------- GlassEmptyState ---------- */
+
+.glass-empty-state {
+  text-align: center;
+  padding: 2.4rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.glass-empty-state-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.4rem;
+}
+.glass-empty-state-title { font-size: 1.05rem; font-weight: 700; }
+.glass-empty-state-subtitle { color: var(--text-secondary); font-size: 0.88rem; max-width: 40ch; }
+
+/* ---------- GlassSidebar ---------- */
+
+.glass-shell { display: flex; min-height: 100vh; }
+
+.glass-sidebar {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  margin: 1rem 0 1rem 1rem;
+  padding: 1.4rem 1rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(var(--glass-blur-lg));
+  -webkit-backdrop-filter: blur(var(--glass-blur-lg));
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+  position: sticky;
+  top: 1rem;
+  height: calc(100vh - 2rem);
+}
+.glass-sidebar-brand { display: flex; align-items: center; gap: 0.6rem; font-weight: 800; padding: 0 0.4rem; }
+.glass-sidebar-nav { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; overflow-y: auto; }
+.glass-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.68rem 0.8rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.glass-sidebar-link:hover { background: var(--accent-soft); color: var(--accent); }
+.glass-sidebar-link.is-active { background: var(--accent-gradient); color: var(--accent-contrast); box-shadow: 0 8px 20px var(--accent-soft); }
+.glass-sidebar-footer { border-top: 1px solid var(--border); padding-top: 1rem; }
+
+@media (max-width: 900px) {
+  .glass-shell { flex-direction: column; }
+  .glass-sidebar {
+    width: auto;
+    margin: 0;
+    border-radius: 0;
+    position: sticky;
+    top: 0;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    overflow-x: auto;
+    z-index: 50;
+  }
+  .glass-sidebar-brand { display: none; }
+  .glass-sidebar-nav { flex-direction: row; flex: none; }
+  .glass-sidebar-link { flex-direction: column; gap: 0.3rem; font-size: 0.68rem; padding: 0.5rem 0.7rem; white-space: nowrap; }
+  .glass-sidebar-footer { display: none; }
+}
+
+/* ---------- GlassNavbar ---------- */
+
+.glass-navbar-wrap { position: sticky; top: 1rem; z-index: 40; padding: 0 1rem; margin-bottom: 0.5rem; }
+.glass-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.4rem;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(var(--glass-blur-lg));
+  -webkit-backdrop-filter: blur(var(--glass-blur-lg));
+  box-shadow: var(--shadow-soft);
+  min-height: var(--navbar-height);
+}
+.glass-navbar-title { font-weight: 700; font-size: 1.05rem; }
+.glass-navbar-actions { display: flex; align-items: center; gap: 0.8rem; }
+
+@media (max-width: 900px) { .glass-navbar-wrap { top: 0; padding: 0.6rem; } }
+
+.glass-content { flex: 1; min-width: 0; padding: 0 1.4rem 3rem; }

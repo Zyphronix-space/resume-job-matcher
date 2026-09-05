@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import EmptyState from '../../components/EmptyState.jsx'
+import GlassCard from '../../components/glass/GlassCard.jsx'
+import GlassButton from '../../components/glass/GlassButton.jsx'
+import GlassBadge from '../../components/glass/GlassBadge.jsx'
+import GlassEmptyState from '../../components/glass/GlassEmptyState.jsx'
+import { useToast } from '../../components/glass/GlassToast.jsx'
 import MatchSummary from '../../components/MatchSummary.jsx'
 import { addApplicationNote, changeApplicationStatus } from '../../utils/applications.js'
 import { getCandidateDetail } from '../../utils/candidates.js'
@@ -11,9 +15,11 @@ const RELEVANT_SECTIONS = ['Work Experience', 'Education', 'Professional Summary
 function ApplicationCard({ app, onReload }) {
   const [noteBody, setNoteBody] = useState('')
   const [saving, setSaving] = useState(false)
+  const showToast = useToast()
 
   const setStatus = async (status) => {
     await changeApplicationStatus(app.id, status)
+    showToast(`Status updated to ${status}`, 'success')
     onReload()
   }
 
@@ -31,18 +37,18 @@ function ApplicationCard({ app, onReload }) {
   }
 
   return (
-    <div className="panel" style={{ marginBottom: '1.2rem' }}>
+    <GlassCard style={{ marginBottom: '1.2rem' }}>
       <div className="form-actions" style={{ justifyContent: 'space-between' }}>
         <div>
-          <h2 className="panel-title">
+          <h2 className="glass-card-title">
             <Link to={`/jobs/${app.job.id}`}>{app.job.title}</Link>
           </h2>
-          <span className={`status-pill status-${app.status.toLowerCase()}`}>{app.status}</span>
+          <GlassBadge status={app.status} />
         </div>
         <div className="data-table-actions">
-          <button type="button" className="new-analysis-btn" onClick={() => setStatus('Shortlisted')}>Shortlist</button>
-          <button type="button" className="file-card-remove" onClick={() => setStatus('Rejected')}>Reject</button>
-          <Link className="new-analysis-btn" to={`/jobs/${app.job.id}?tab=Candidates`}>Compare</Link>
+          <GlassButton variant="secondary" size="sm" onClick={() => setStatus('Shortlisted')}>Shortlist</GlassButton>
+          <GlassButton variant="danger" size="sm" onClick={() => setStatus('Rejected')}>Reject</GlassButton>
+          <GlassButton as={Link} to={`/jobs/${app.job.id}?tab=Candidates`} variant="secondary" size="sm">Compare</GlassButton>
         </div>
       </div>
 
@@ -61,14 +67,15 @@ function ApplicationCard({ app, onReload }) {
       )}
       <form onSubmit={addNote} className="form-actions">
         <input
-          style={{ flex: 1, minWidth: 200, padding: '0.6rem 0.8rem', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface-strong)', color: 'var(--text)' }}
+          className="glass-field-control"
+          style={{ flex: 1, minWidth: 200 }}
           value={noteBody}
           onChange={(e) => setNoteBody(e.target.value)}
           placeholder="Add a note about this candidate…"
         />
-        <button type="submit" className="analyze-btn" disabled={saving}>Add note</button>
+        <GlassButton type="submit" variant="primary" disabled={saving}>Add note</GlassButton>
       </form>
-    </div>
+    </GlassCard>
   )
 }
 
@@ -99,37 +106,34 @@ export default function CandidateDetailPage() {
         <p className="hero-subtitle">{candidate.email} {candidate.phone && `· ${candidate.phone}`} {candidate.location && `· ${candidate.location}`}</p>
       </section>
 
-      <div className="panel" style={{ marginBottom: '1.2rem' }}>
-        <h2 className="panel-title">Resumes</h2>
+      <GlassCard title="Resumes" style={{ marginBottom: '1.2rem' }}>
         <div className="resume-list">
           {resumes.map((r) => (
             <div key={r.id} className={`resume-item ${r.is_active ? 'is-active' : ''}`}>
-              <span>{r.filename} {r.is_active && <span className="status-pill">Active</span>} — v{r.version}</span>
+              <span>{r.filename} {r.is_active && <GlassBadge variant="success">Active</GlassBadge>} — v{r.version}</span>
               <div className="resume-item-actions">
-                <button type="button" className="new-analysis-btn" onClick={() => viewResume(r.id)}>View</button>
-                <button type="button" className="new-analysis-btn" onClick={() => downloadResume(r.id, r.filename)}>Download</button>
+                <GlassButton variant="secondary" size="sm" onClick={() => viewResume(r.id)}>View</GlassButton>
+                <GlassButton variant="secondary" size="sm" onClick={() => downloadResume(r.id, r.filename)}>Download</GlassButton>
               </div>
             </div>
           ))}
         </div>
-      </div>
+      </GlassCard>
 
       {sections && (
-        <div className="panel" style={{ marginBottom: '1.2rem' }}>
-          <h2 className="panel-title">Resume sections</h2>
-          <p className="panel-subtitle">Extracted directly from the active resume's PDF text.</p>
+        <GlassCard title="Resume sections" subtitle="Extracted directly from the active resume's PDF text." style={{ marginBottom: '1.2rem' }}>
           {RELEVANT_SECTIONS.filter((s) => sections[s]).map((s) => (
             <div key={s} style={{ marginTop: '0.9rem' }}>
               <h3 className="roadmap-subheading">{s}</h3>
               <p style={{ whiteSpace: 'pre-wrap', fontSize: '0.88rem', color: 'var(--text-secondary)' }}>{sections[s]}</p>
             </div>
           ))}
-        </div>
+        </GlassCard>
       )}
 
-      <h2 className="panel-title" style={{ margin: '1.2rem 0 0.8rem' }}>Applications</h2>
+      <h2 className="glass-card-title" style={{ margin: '1.2rem 0 0.8rem' }}>Applications</h2>
       {applications.length === 0 ? (
-        <EmptyState title="No applications to your jobs" />
+        <GlassEmptyState title="No applications to your jobs" />
       ) : (
         applications.map((app) => <ApplicationCard key={app.id} app={app} onReload={load} />)
       )}

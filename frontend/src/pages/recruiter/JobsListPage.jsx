@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import EmptyState from '../../components/EmptyState.jsx'
+import GlassEmptyState from '../../components/glass/GlassEmptyState.jsx'
+import GlassButton from '../../components/glass/GlassButton.jsx'
+import GlassBadge from '../../components/glass/GlassBadge.jsx'
+import GlassTable from '../../components/glass/GlassTable.jsx'
+import GlassModal from '../../components/glass/GlassModal.jsx'
+import { useToast } from '../../components/glass/GlassToast.jsx'
 import JobForm from '../../components/JobForm.jsx'
 import { PlusIcon } from '../../components/icons.jsx'
 import { createJob, deleteJob, listMyJobs } from '../../utils/jobs.js'
@@ -9,6 +14,7 @@ export default function JobsListPage() {
   const [jobs, setJobs] = useState(null)
   const [error, setError] = useState(null)
   const [showForm, setShowForm] = useState(false)
+  const showToast = useToast()
 
   const load = () => listMyJobs().then(setJobs).catch((err) => setError(err.message))
   useEffect(() => { load() }, [])
@@ -16,12 +22,14 @@ export default function JobsListPage() {
   const handleCreate = async (job) => {
     await createJob(job)
     setShowForm(false)
+    showToast(`"${job.title}" created`, 'success')
     load()
   }
 
   const handleDelete = async (job) => {
     if (!window.confirm(`Delete "${job.title}"? This also removes its applications.`)) return
     await deleteJob(job.id)
+    showToast(`"${job.title}" deleted`, 'info')
     load()
   }
 
@@ -33,50 +41,45 @@ export default function JobsListPage() {
       </section>
 
       <div className="form-actions" style={{ justifyContent: 'flex-end', marginBottom: '1rem' }}>
-        <button type="button" className="analyze-btn" onClick={() => setShowForm((s) => !s)}>
-          <PlusIcon size={16} /> {showForm ? 'Close' : 'Create job'}
-        </button>
+        <GlassButton variant="primary" icon={<PlusIcon size={16} />} onClick={() => setShowForm(true)}>Create job</GlassButton>
       </div>
 
       {showForm && (
-        <div className="panel" style={{ marginBottom: '1.2rem' }}>
-          <h2 className="panel-title">New job</h2>
+        <GlassModal title="New job" onClose={() => setShowForm(false)} width={720}>
           <JobForm onSubmit={handleCreate} onCancel={() => setShowForm(false)} submitLabel="Create job" />
-        </div>
+        </GlassModal>
       )}
 
       {error && <p className="field-error">{error}</p>}
 
-      {jobs && jobs.length === 0 && !showForm && (
-        <EmptyState title="No jobs yet" subtitle="Create your first job to start receiving matched candidates." />
+      {jobs && jobs.length === 0 && (
+        <GlassEmptyState title="No jobs yet" subtitle="Create your first job to start receiving matched candidates." />
       )}
 
       {jobs && jobs.length > 0 && (
-        <div className="data-table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr><th>Title</th><th>Location</th><th>Type</th><th>Status</th><th>Applicants</th><th>Shortlisted</th><th>Actions</th></tr>
-            </thead>
-            <tbody>
-              {jobs.map((j) => (
-                <tr key={j.id}>
-                  <td data-label="Title"><Link to={`/jobs/${j.id}`}>{j.title}</Link></td>
-                  <td data-label="Location">{j.location || '—'}</td>
-                  <td data-label="Type">{j.employment_type}</td>
-                  <td data-label="Status"><span className={`status-pill status-${j.status.toLowerCase()}`}>{j.status}</span></td>
-                  <td data-label="Applicants">{j.applicants_count}</td>
-                  <td data-label="Shortlisted">{j.shortlisted_count}</td>
-                  <td data-label="Actions">
-                    <div className="data-table-actions">
-                      <Link className="new-analysis-btn" to={`/jobs/${j.id}`}>View</Link>
-                      <button type="button" className="file-card-remove" onClick={() => handleDelete(j)}>Delete</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <GlassTable>
+          <thead>
+            <tr><th>Title</th><th>Location</th><th>Type</th><th>Status</th><th>Applicants</th><th>Shortlisted</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            {jobs.map((j) => (
+              <tr key={j.id}>
+                <td data-label="Title"><Link to={`/jobs/${j.id}`}>{j.title}</Link></td>
+                <td data-label="Location">{j.location || '—'}</td>
+                <td data-label="Type">{j.employment_type}</td>
+                <td data-label="Status"><GlassBadge status={j.status} /></td>
+                <td data-label="Applicants">{j.applicants_count}</td>
+                <td data-label="Shortlisted">{j.shortlisted_count}</td>
+                <td data-label="Actions">
+                  <div className="data-table-actions">
+                    <GlassButton as={Link} to={`/jobs/${j.id}`} variant="secondary" size="sm">View</GlassButton>
+                    <GlassButton variant="danger" size="sm" onClick={() => handleDelete(j)}>Delete</GlassButton>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </GlassTable>
       )}
     </>
   )

@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import EmptyState from '../../components/EmptyState.jsx'
+import GlassCard from '../../components/glass/GlassCard.jsx'
+import GlassButton from '../../components/glass/GlassButton.jsx'
+import GlassCandidateCard from '../../components/glass/GlassCandidateCard.jsx'
+import GlassEmptyState from '../../components/glass/GlassEmptyState.jsx'
 import { getShortlist } from '../../utils/applications.js'
 import { downloadShortlistReport } from '../../utils/analytics.js'
 
@@ -33,32 +36,27 @@ export default function ShortlistsPage() {
 
       {shortlist && shortlist.length > 0 && (
         <div className="form-actions" style={{ justifyContent: 'flex-end', marginBottom: '1rem' }}>
-          <button type="button" className="new-analysis-btn" onClick={downloadShortlistReport}>Download shortlist report (CSV)</button>
+          <GlassButton variant="secondary" onClick={downloadShortlistReport}>Download shortlist report (CSV)</GlassButton>
         </div>
       )}
 
       {shortlist && shortlist.length === 0 && (
-        <EmptyState title="No shortlisted candidates yet" subtitle="Shortlist candidates from a job's Candidates tab." />
+        <GlassEmptyState title="No shortlisted candidates yet" subtitle="Shortlist candidates from a job's Candidates tab." />
       )}
 
       {byJob.map(({ job, apps }) => (
-        <div className="panel" key={job.id} style={{ marginBottom: '1.2rem' }}>
-          <h2 className="panel-title"><Link to={`/jobs/${job.id}`}>{job.title}</Link></h2>
-          <div className="data-table-wrap">
-            <table className="data-table">
-              <thead><tr><th>Candidate</th><th>Match</th><th>Actions</th></tr></thead>
-              <tbody>
-                {apps.map((a) => (
-                  <tr key={a.id}>
-                    <td data-label="Candidate">{a.candidate.full_name}</td>
-                    <td data-label="Match">{Math.round(a.match_score)}%</td>
-                    <td data-label="Actions"><Link className="new-analysis-btn" to={`/candidates/${a.candidate.id}`}>View</Link></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <GlassCard key={job.id} title={<Link to={`/jobs/${job.id}`}>{job.title}</Link>} style={{ marginBottom: '1.2rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
+            {apps.map((a) => (
+              <GlassCandidateCard
+                key={a.id}
+                name={a.candidate.full_name}
+                score={a.match_score}
+                actions={<GlassButton as={Link} to={`/candidates/${a.candidate.id}`} variant="secondary" size="sm">View</GlassButton>}
+              />
+            ))}
           </div>
-        </div>
+        </GlassCard>
       ))}
     </>
   )

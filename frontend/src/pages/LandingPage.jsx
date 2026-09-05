@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom'
+import GlassCard from '../components/glass/GlassCard.jsx'
+import GlassButton from '../components/glass/GlassButton.jsx'
 
 export default function LandingPage() {
   return (
@@ -10,19 +12,18 @@ export default function LandingPage() {
           matching and skill-taxonomy analysis — real scores, real matched/missing skills, no black box.
         </p>
         <div className="landing-hero-actions">
-          <Link to="/signup" className="analyze-btn">Get started</Link>
-          <Link to="/features" className="new-analysis-btn">See how it works</Link>
+          <GlassButton as={Link} to="/signup" variant="primary">Get started</GlassButton>
+          <GlassButton as={Link} to="/features" variant="secondary">See how it works</GlassButton>
         </div>
       </section>
 
-      <div className="panel">
-        <h2 className="panel-title">Resume → Job → AI Match → Ranking → Shortlist → Decision</h2>
-        <p className="panel-subtitle">
+      <GlassCard title="Resume → Job → AI Match → Ranking → Shortlist → Decision">
+        <p className="glass-card-subtitle">
           Candidates upload a resume once. Recruiters post a job once. Every application is scored the
           same way — sentence-embedding semantic similarity plus curated skill-taxonomy matching — so
           ranking a pool of candidates is consistent and explainable from the first applicant to the last.
         </p>
-      </div>
+      </GlassCard>
     </>
   )
 }

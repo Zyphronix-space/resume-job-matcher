@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Logo from '../components/Logo.jsx'
+import GlassCard from '../components/glass/GlassCard.jsx'
+import GlassButton from '../components/glass/GlassButton.jsx'
+import GlassInput from '../components/glass/GlassInput.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 
 // "Continue with Google" is intentionally not rendered: no OAuth client is
@@ -44,7 +47,7 @@ export default function SignupPage() {
 
   return (
     <div className="auth-page">
-      <div className="auth-card">
+      <GlassCard className="auth-card">
         <div className="auth-brand">
           <Logo size={34} />
           <span>RecruitAI</span>
@@ -61,34 +64,22 @@ export default function SignupPage() {
             </button>
           </div>
 
-          <label className="find-field">
-            <span>Full name</span>
-            <input required value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Jane Perera" />
-          </label>
-          <label className="find-field">
-            <span>Email</span>
-            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
-          </label>
-          <label className="find-field">
-            <span>Password</span>
-            <input type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" />
-          </label>
-          <label className="find-field">
-            <span>Confirm password</span>
-            <input type="password" required minLength={8} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter your password" />
-          </label>
+          <GlassInput label="Full name" required value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Jane Perera" />
+          <GlassInput label="Email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+          <GlassInput label="Password" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" />
+          <GlassInput label="Confirm password" type="password" required minLength={8} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter your password" />
 
-          {error && <p className="field-error">{error}</p>}
+          {error && <p className="glass-field-error">{error}</p>}
 
-          <button type="submit" className="analyze-btn auth-submit-btn" disabled={loading}>
+          <GlassButton type="submit" variant="primary" block disabled={loading}>
             {loading ? 'Please wait…' : 'Create account'}
-          </button>
+          </GlassButton>
         </form>
 
         <p className="auth-switch">
-          Already have an account? <Link to="/login">Sign in</Link>
+          Already have an account? <Link to="/login" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>Sign in</Link>
         </p>
-      </div>
+      </GlassCard>
     </div>
   )
 }
