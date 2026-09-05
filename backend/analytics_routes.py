@@ -93,12 +93,19 @@ def analytics_overview(
     }
 
 
+_REPORT_FIELDNAMES = [
+    "job_title", "candidate_name", "candidate_email", "match_score", "skill_coverage",
+    "status", "matched_skills", "missing_skills", "applied_at",
+]
+
+
 def _csv_response(rows: list[dict], filename: str) -> Response:
     buffer = io.StringIO()
-    if rows:
-        writer = csv.DictWriter(buffer, fieldnames=list(rows[0].keys()))
-        writer.writeheader()
-        writer.writerows(rows)
+    # Always write the header, even with zero rows, so the file still
+    # documents its own column structure rather than coming back empty.
+    writer = csv.DictWriter(buffer, fieldnames=_REPORT_FIELDNAMES)
+    writer.writeheader()
+    writer.writerows(rows)
     return Response(
         content=buffer.getvalue(),
         media_type="text/csv",
