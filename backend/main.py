@@ -38,7 +38,7 @@ import db_models
 from analytics_routes import router as analytics_router
 from applications_routes import router as applications_router
 from auth import get_current_user
-from database import Base, engine
+from database import Base, add_missing_columns, engine
 from job_matcher import match_single
 from jobs_routes import router as jobs_router
 from resume_analyzer import extract_resume_profile, extract_text_from_pdf
@@ -47,6 +47,7 @@ from routes_admin import router as admin_router
 from routes_auth import router as auth_router
 
 Base.metadata.create_all(bind=engine)
+add_missing_columns()
 
 app = FastAPI(title="RecruitAI API")
 

@@ -21,7 +21,7 @@ storage) in that environment.
 import os
 from datetime import datetime, timezone
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./resume_match.db")
@@ -29,6 +29,30 @@ DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./resume_match.db")
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
+
+def add_missing_columns() -> None:
+    """
+    Base.metadata.create_all() only creates tables that don't exist yet — it
+    never alters a table that's already there. On the persistent /home
+    database, a `users` table was created by an earlier deploy before columns
+    like `role` existed on the model, so every later query against it fails
+    with "no such column" instead of ever reaching create_all. This patches
+    any column the current models declare but the live table is missing,
+    as a nullable column with no default — enough to stop the crash without
+    a full migration framework for what is still a single-file SQLite db.
+    """
+    inspector = inspect(engine)
+    with engine.begin() as conn:
+        for table in Base.metadata.sorted_tables:
+            if not inspector.has_table(table.name):
+                continue
+            existing_columns = {c["name"] for c in inspector.get_columns(table.name)}
+            for column in table.columns:
+                if column.name in existing_columns:
+                    continue
+                col_type = column.type.compile(dialect=engine.dialect)
+                conn.execute(text(f'ALTER TABLE "{table.name}" ADD COLUMN "{column.name}" {col_type}'))
 
 
 def get_db():
