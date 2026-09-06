@@ -1,5 +1,10 @@
 # RecruitAI
 
+![Python](https://img.shields.io/badge/-Python-black?style=flat-square&logo=python&logoColor=white)
+![sentence-transformers](https://img.shields.io/badge/-sentence--transformers-black?style=flat-square)
+![FastAPI](https://img.shields.io/badge/-FastAPI-black?style=flat-square&logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/-React-black?style=flat-square&logo=react&logoColor=white)
+
 A recruitment workspace for recruiters and candidates, built around one explainable NLP
 matching pipeline — sentence-embedding semantic similarity plus curated skill-taxonomy
 detection. Every match score, ranking, and analytics number in the app traces back to that
