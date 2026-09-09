@@ -1,16 +1,34 @@
-# RecruitAI
+<p align="center"><img src="docs/banner.svg" alt="RecruitAI — Explainable semantic CV-to-job matching" width="100%" /></p>
 
-![Python](https://img.shields.io/badge/-Python-black?style=flat-square&logo=python&logoColor=white)
-![sentence-transformers](https://img.shields.io/badge/-sentence--transformers-black?style=flat-square)
-![FastAPI](https://img.shields.io/badge/-FastAPI-black?style=flat-square&logo=fastapi&logoColor=white)
-![React](https://img.shields.io/badge/-React-black?style=flat-square&logo=react&logoColor=white)
+<p align="center">
+<img src="https://img.shields.io/badge/-Python-0d0d16?style=flat-square&logo=python&logoColor=white" alt="Python" />
+<img src="https://img.shields.io/badge/-sentence--transformers-6C5CE7?style=flat-square" alt="sentence-transformers" />
+<img src="https://img.shields.io/badge/-FastAPI-0d0d16?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI" />
+<img src="https://img.shields.io/badge/-React-0d0d16?style=flat-square&logo=react&logoColor=white" alt="React" />
+</p>
+
+# RecruitAI
 
 A recruitment workspace for recruiters and candidates, built around one explainable NLP
 matching pipeline — sentence-embedding semantic similarity plus curated skill-taxonomy
 detection. Every match score, ranking, and analytics number in the app traces back to that
 same pipeline; nothing is a black-box "AI score."
 
-**Core flow:** Resume → Job → AI Match → Candidate Analysis → Ranking → Shortlist → Decision
+**Core flow:**
+
+```mermaid
+flowchart LR
+    R["Resume"] --> E["Sentence embedding<br/>(all-MiniLM-L6-v2)"]
+    J["Job posting"] --> E
+    E --> M["Match score +<br/>skill-gap breakdown"]
+    M --> A["Candidate analysis"]
+    A --> RK["Ranking"]
+    RK --> S["Shortlist"]
+    S --> D["Decision"]
+
+    classDef stage fill:#6C5CE7,stroke:#4834B0,color:#fff
+    class E,M stage
+```
 
 > **Note on the live demo:** the URL below is still running the project's earlier,
 > single-role version (upload a CV, match it against a pasted job description). The
@@ -28,6 +46,13 @@ analytics computed live from their own jobs and applications.
 
 **Candidates** upload a resume (parsed once, reused everywhere), see how they match every
 open role, apply, and track every application through a real status pipeline.
+
+**Why semantic matching instead of keyword matching?** A keyword scanner rewards resumes
+that happen to repeat the job description's exact phrasing and misses everything else.
+Sentence embeddings compare *meaning*: a resume that says "led a team migrating services to
+microservices" can match a job asking for "distributed systems experience" even with no
+shared keyword. The skill taxonomy on top of that still gives recruiters an explicit,
+checkable matched/missing skill list — so the score is semantic, but never a black box.
 
 - **Role-based accounts** — recruiter or candidate, chosen at signup; the first account on
   a fresh database becomes an admin automatically.
