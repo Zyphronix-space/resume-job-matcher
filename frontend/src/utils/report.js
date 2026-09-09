@@ -91,7 +91,7 @@ export function downloadReport(result, meta = {}) {
   addHeading('Priority Skill Gaps')
   const roadmap = (result.skill_gap_roadmap || []).slice(0, 5)
   addList(
-    roadmap.map((item, i) => `${i + 1}. ${skillLabel(item.skill)} — ${item.importance}`),
+    roadmap.map((item, i) => `${i + 1}. ${skillLabel(item.skill)}: ${item.importance}`),
     'No priority gaps identified',
   )
 
@@ -104,7 +104,7 @@ export function downloadReport(result, meta = {}) {
   doc.setFontSize(8.5)
   doc.setTextColor(140, 140, 150)
   const disclaimer = doc.splitTextToSize(
-    'Scores reflect sentence-embedding semantic similarity and curated-taxonomy skill detection — they are not a probability of getting hired.',
+    'Scores reflect sentence-embedding semantic similarity and curated-taxonomy skill detection. They are not a probability of getting hired.',
     499,
   )
   doc.text(disclaimer, marginX, y)

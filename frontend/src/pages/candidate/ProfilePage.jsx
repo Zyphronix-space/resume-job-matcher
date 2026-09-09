@@ -64,7 +64,7 @@ export default function ProfilePage() {
         </form>
       </GlassCard>
 
-      <GlassCard title="Skills" subtitle="Detected from your active resume — upload a new one on the Resumes page to update this.">
+      <GlassCard title="Skills" subtitle="Detected from your active resume. Upload a new one on the Resumes page to update this.">
         <div className="chip-input-row" style={{ marginTop: '0.6rem' }}>
           {activeResume?.cv_skills?.length ? (
             activeResume.cv_skills.map((s) => <span key={s} className="skill-pill skill-pill-matched">{skillLabel(s)}</span>)

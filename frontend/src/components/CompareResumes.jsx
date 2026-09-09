@@ -96,7 +96,7 @@ export default function CompareResumes({ apiUrl }) {
           >
             <UploadIcon size={28} className="dropzone-icon" />
             <p className="dropzone-title">Drop resumes here</p>
-            <p className="dropzone-sub">or click to browse — multiple PDFs supported</p>
+            <p className="dropzone-sub">or click to browse, multiple PDFs supported</p>
             <input
               ref={inputRef}
               type="file"

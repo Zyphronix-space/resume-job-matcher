@@ -201,8 +201,8 @@ export default function JobDetailPage() {
                       <td>{a.candidate.full_name}</td>
                       <td>{Math.round(a.match_score)}%</td>
                       <td>{a.matched_skills.length} matched</td>
-                      <td>{a.job.experience || '—'}</td>
-                      <td>{a.job.education || '—'}</td>
+                      <td>{a.job.experience || 'N/A'}</td>
+                      <td>{a.job.education || 'N/A'}</td>
                       <td><GlassBadge status={a.status} /></td>
                     </tr>
                   ))}
@@ -233,7 +233,7 @@ export default function JobDetailPage() {
         <GlassCard>
           <GlassSelect
             label="Candidate" className="candidate-picker" value={selectedMatchId || ''} onChange={setSelectedMatchId}
-            options={candidates.map((a) => ({ value: a.id, label: `${a.candidate.full_name} — ${Math.round(a.match_score)}%` }))}
+            options={candidates.map((a) => ({ value: a.id, label: `${a.candidate.full_name}: ${Math.round(a.match_score)}%` }))}
           />
           {selectedMatch ? <MatchSummary result={selectedMatch} /> : <GlassEmptyState title="No candidates to analyze yet" />}
         </GlassCard>

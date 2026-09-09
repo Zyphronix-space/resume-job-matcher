@@ -3,9 +3,9 @@ import { interpretScore, SCORE_STATE_CLASS } from '../utils/score.js'
 
 const METRIC_INFO = {
   semantic:
-    "Based on sentence-transformer embeddings (all-MiniLM-L6-v2) and cosine similarity between the full text of your resume and the job description. Measures how similar the overall meaning is — not whether specific skills are present.",
+    "Based on sentence-transformer embeddings (all-MiniLM-L6-v2) and cosine similarity between the full text of your resume and the job description. Measures how similar the overall meaning is, not whether specific skills are present.",
   coverage:
-    'The percentage of taxonomy skills detected in the job description that were also detected in your resume. Measures keyword/skill overlap — not overall meaning.',
+    'The percentage of taxonomy skills detected in the job description that were also detected in your resume. Measures keyword/skill overlap, not overall meaning.',
 }
 
 function StatTile({ label, value, suffix = '%', info, tone }) {
@@ -42,7 +42,7 @@ export default function ScoreSummary({ result }) {
     <div className="panel">
       <h2 className="panel-title">Resume vs job</h2>
       <p className="panel-subtitle">
-        Semantic match and skill coverage are different measurements — they can (and often do) disagree.
+        Semantic match and skill coverage are different measurements. They can (and often do) disagree.
       </p>
 
       <div className="stat-grid">

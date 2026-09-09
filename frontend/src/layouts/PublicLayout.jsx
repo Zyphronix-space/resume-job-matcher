@@ -1,5 +1,6 @@
 import { Link, Outlet } from 'react-router-dom'
 import Logo from '../components/Logo.jsx'
+import Footer from '../components/Footer.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 
 export default function PublicLayout() {
@@ -29,6 +30,7 @@ export default function PublicLayout() {
       <main className="page public-page">
         <Outlet />
       </main>
+      <Footer />
     </>
   )
 }

@@ -4,6 +4,7 @@ import Logo from '../components/Logo.jsx'
 import GlassCard from '../components/glass/GlassCard.jsx'
 import GlassButton from '../components/glass/GlassButton.jsx'
 import GlassInput from '../components/glass/GlassInput.jsx'
+import GlassCheckbox from '../components/glass/GlassCheckbox.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 
 // "Continue with Google" is intentionally not rendered: no OAuth client is
@@ -18,6 +19,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [role, setRole] = useState('candidate')
+  const [agreed, setAgreed] = useState(false)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
 
@@ -31,6 +33,10 @@ export default function SignupPage() {
     }
     if (password.length < 8) {
       setError('Password must be at least 8 characters')
+      return
+    }
+    if (!agreed) {
+      setError('You need to agree to the Terms of Service and Privacy Policy to create an account')
       return
     }
 
@@ -68,6 +74,19 @@ export default function SignupPage() {
           <GlassInput label="Email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
           <GlassInput label="Password" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" />
           <GlassInput label="Confirm password" type="password" required minLength={8} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter your password" />
+
+          <GlassCheckbox
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+            label={(
+              <>
+                I agree to the{' '}
+                <Link to="/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>Terms of Service</Link>
+                {' '}and{' '}
+                <Link to="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>Privacy Policy</Link>
+              </>
+            )}
+          />
 
           {error && <p className="glass-field-error">{error}</p>}
 

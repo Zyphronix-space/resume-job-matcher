@@ -108,7 +108,7 @@ export default function JobDetailView({
 
         {job.required_skills.length === 0 && job.preferred_skills.length === 0 ? (
           <p className="job-detail-facts-not-provided">
-            This posting doesn't list structured required/preferred skills — skill matching below is based on
+            This posting doesn't list structured required/preferred skills. Skill matching below is based on
             the taxonomy detected directly in the job description text.
           </p>
         ) : (

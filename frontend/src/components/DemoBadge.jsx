@@ -3,5 +3,5 @@
 // isn't actually marked demo, so a real provider added later won't be
 // mislabeled.
 export default function DemoBadge() {
-  return <span className="demo-badge" title="Sample data — not a live posting">DEMO</span>
+  return <span className="demo-badge" title="Sample data, not a live posting">DEMO</span>
 }

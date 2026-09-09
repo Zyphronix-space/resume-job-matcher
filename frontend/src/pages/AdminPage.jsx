@@ -45,7 +45,7 @@ export default function AdminPage() {
     <>
       <section className="hero">
         <h1 className="hero-title">Admin panel</h1>
-        <p className="hero-subtitle">System-wide oversight — visible only to admin accounts.</p>
+        <p className="hero-subtitle">System-wide oversight, visible only to admin accounts.</p>
       </section>
 
       {error && <p className="field-error">{error}</p>}
@@ -69,7 +69,7 @@ export default function AdminPage() {
           <tbody>
             {users.map((u) => (
               <tr key={u.id}>
-                <td data-label="Name">{u.full_name || '—'}</td>
+                <td data-label="Name">{u.full_name || 'N/A'}</td>
                 <td data-label="Email">{u.email}</td>
                 <td data-label="Role">{u.role}{u.is_admin ? ' · Admin' : ''}</td>
                 <td data-label="Jobs">{u.jobs_count}</td>

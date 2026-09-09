@@ -91,7 +91,7 @@ export default function ApplicationWorkspace({ job, matchResult, application, on
       {matchResult && (
         <div className="panel">
           <h2 className="panel-title">Before applying</h2>
-          <p className="panel-subtitle">Suggested improvements — based only on what was actually detected.</p>
+          <p className="panel-subtitle">Suggested improvements, based only on what was actually detected.</p>
           <ResumeImprovements result={matchResult} />
         </div>
       )}
@@ -99,7 +99,7 @@ export default function ApplicationWorkspace({ job, matchResult, application, on
       <div className="panel">
         <div className="skill-card-head">
           <h2 className="panel-title">Cover letter</h2>
-          <span className="ai-draft-badge">AI-generated draft — review before sending</span>
+          <span className="ai-draft-badge">AI-generated draft, review before sending</span>
         </div>
         <p className="panel-subtitle">Generated from your detected matching skills. Edit freely before using it.</p>
         <button type="button" className="new-analysis-btn" onClick={handleGenerateCoverLetter}>Generate cover letter</button>
@@ -114,7 +114,7 @@ export default function ApplicationWorkspace({ job, matchResult, application, on
 
       <div className="panel">
         <h2 className="panel-title">Application questions</h2>
-        <p className="panel-subtitle">Optional — add any questions from the application form.</p>
+        <p className="panel-subtitle">Optional: add any questions from the application form.</p>
 
         {questions.map((q) => (
           <div key={q.id} className="application-question">
@@ -149,7 +149,7 @@ export default function ApplicationWorkspace({ job, matchResult, application, on
         <h2 className="panel-title">Application review</h2>
 
         <dl className="job-detail-facts review-facts">
-          <div><dt>Internship</dt><dd>{job.title} — {job.company}</dd></div>
+          <div><dt>Internship</dt><dd>{job.title} at {job.company}</dd></div>
           <div><dt>Resume</dt><dd>{application.resumeFilename || 'Not provided'}</dd></div>
           <div><dt>Cover letter</dt><dd>{hasCoverLetter ? 'Drafted' : 'Not written yet'}</dd></div>
           <div><dt>Application answers</dt><dd>{questions.length} answer{questions.length === 1 ? '' : 's'}</dd></div>
@@ -158,7 +158,7 @@ export default function ApplicationWorkspace({ job, matchResult, application, on
 
         <label className="review-complete-check">
           <input type="checkbox" checked={reviewComplete} onChange={(e) => setReviewComplete(e.target.checked)} />
-          Review complete — I've checked the internship, resume, cover letter, and answers above.
+          Review complete. I've checked the internship, resume, cover letter, and answers above.
         </label>
 
         <button
@@ -170,7 +170,7 @@ export default function ApplicationWorkspace({ job, matchResult, application, on
           <ExternalLinkIcon size={16} /> Apply
         </button>
         <p className="job-detail-description apply-note">
-          This opens the official application page. You submit your application there yourself — this app never
+          This opens the official application page. You submit your application there yourself. This app never
           submits applications on your behalf.
         </p>
       </div>

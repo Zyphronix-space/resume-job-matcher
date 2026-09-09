@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Link, Outlet } from 'react-router-dom'
 import GlassSidebar from '../components/glass/GlassSidebar.jsx'
 import GlassNavbar from '../components/glass/GlassNavbar.jsx'
 import CommandPalette from '../components/CommandPalette.jsx'
@@ -75,10 +75,16 @@ export default function AppLayout() {
       <GlassSidebar
         links={allLinks}
         footer={(
-          <button type="button" className="glass-sidebar-link" style={{ width: '100%' }} onClick={logout}>
-            <LogOutIcon size={19} />
-            <span>Sign out</span>
-          </button>
+          <>
+            <button type="button" className="glass-sidebar-link" style={{ width: '100%' }} onClick={logout}>
+              <LogOutIcon size={19} />
+              <span>Sign out</span>
+            </button>
+            <nav className="glass-sidebar-legal" aria-label="Legal">
+              <Link to="/privacy">Privacy</Link>
+              <Link to="/terms">Terms</Link>
+            </nav>
+          </>
         )}
       />
 

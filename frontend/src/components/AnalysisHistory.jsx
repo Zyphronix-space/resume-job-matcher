@@ -27,7 +27,7 @@ export default function AnalysisHistory({ version, onSelect, onCleared }) {
         <div>
           <h2 className="panel-title">Analysis history</h2>
           <p className="panel-subtitle">
-            Stored in the local database — scores and skill lists, not your resume or job description text.
+            Stored in the local database: scores and skill lists, not your resume or job description text.
           </p>
         </div>
         <button

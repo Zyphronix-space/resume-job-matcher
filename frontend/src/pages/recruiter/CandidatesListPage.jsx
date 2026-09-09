@@ -48,7 +48,7 @@ export default function CandidatesListPage() {
               <tr key={c.id}>
                 <td data-label="Name">{c.full_name}</td>
                 <td data-label="Email">{c.email}</td>
-                <td data-label="Headline">{c.headline || '—'}</td>
+                <td data-label="Headline">{c.headline || 'N/A'}</td>
                 <td data-label="Applications">{c.applications_count}</td>
                 <td data-label="Best match">{Math.round(c.best_match_score)}%</td>
                 <td data-label="Latest status"><GlassBadge status={c.latest_status} /></td>

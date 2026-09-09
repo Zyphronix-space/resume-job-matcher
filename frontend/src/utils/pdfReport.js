@@ -25,7 +25,7 @@ export function downloadCandidatesPdf(title, applications) {
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(9.5)
   doc.setTextColor(120, 120, 130)
-  doc.text(`Generated ${new Date().toLocaleString()} — ${applications.length} candidate(s)`, marginX, y)
+  doc.text(`Generated ${new Date().toLocaleString()}, ${applications.length} candidate(s)`, marginX, y)
   y += 30
 
   applications.forEach((app, i) => {
@@ -37,7 +37,7 @@ export function downloadCandidatesPdf(title, applications) {
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(10)
     doc.setTextColor(90, 90, 100)
-    doc.text(`${Math.round(app.match_score)}% match — ${app.status}`, 420, y)
+    doc.text(`${Math.round(app.match_score)}% match, ${app.status}`, 420, y)
     y += 16
 
     doc.setFontSize(9.5)
@@ -63,7 +63,7 @@ export function downloadCandidatesPdf(title, applications) {
   doc.setFontSize(8.5)
   doc.setTextColor(140, 140, 150)
   const disclaimer = doc.splitTextToSize(
-    'Scores reflect sentence-embedding semantic similarity and curated-taxonomy skill detection — they are not a probability of getting hired.',
+    'Scores reflect sentence-embedding semantic similarity and curated-taxonomy skill detection. They are not a probability of getting hired.',
     499,
   )
   doc.text(disclaimer, marginX, y)

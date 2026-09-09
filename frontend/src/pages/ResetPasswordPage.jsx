@@ -45,7 +45,7 @@ export default function ResetPasswordPage() {
         <p className="hero-subtitle auth-tagline">Choose a new password.</p>
 
         {done ? (
-          <p className="form-success">Password updated — redirecting to sign in…</p>
+          <p className="form-success">Password updated. Redirecting to sign in…</p>
         ) : (
           <form onSubmit={handleSubmit} className="auth-form">
             <GlassInput label="Reset token" required value={token} onChange={(e) => setToken(e.target.value)} placeholder="Paste your reset token" />

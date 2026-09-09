@@ -12,6 +12,8 @@ import LoginPage from './pages/LoginPage.jsx'
 import SignupPage from './pages/SignupPage.jsx'
 import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx'
 import ResetPasswordPage from './pages/ResetPasswordPage.jsx'
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage.jsx'
+import TermsPage from './pages/TermsPage.jsx'
 
 import RecruiterDashboardPage from './pages/recruiter/RecruiterDashboardPage.jsx'
 import JobsListPage from './pages/recruiter/JobsListPage.jsx'
@@ -42,6 +44,8 @@ export default function App() {
         <Route path="/signup" element={<RedirectIfAuthed><SignupPage /></RedirectIfAuthed>} />
         <Route path="/forgot-password" element={<RedirectIfAuthed><ForgotPasswordPage /></RedirectIfAuthed>} />
         <Route path="/reset-password" element={<RedirectIfAuthed><ResetPasswordPage /></RedirectIfAuthed>} />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
       </Route>
 
       <Route element={<RequireAuth />}>

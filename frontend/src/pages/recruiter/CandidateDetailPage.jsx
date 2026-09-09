@@ -110,7 +110,7 @@ export default function CandidateDetailPage() {
         <div className="resume-list">
           {resumes.map((r) => (
             <div key={r.id} className={`resume-item ${r.is_active ? 'is-active' : ''}`}>
-              <span>{r.filename} {r.is_active && <GlassBadge variant="success">Active</GlassBadge>} — v{r.version}</span>
+              <span>{r.filename} {r.is_active && <GlassBadge variant="success">Active</GlassBadge>} (v{r.version})</span>
               <div className="resume-item-actions">
                 <GlassButton variant="secondary" size="sm" onClick={() => viewResume(r.id)}>View</GlassButton>
                 <GlassButton variant="secondary" size="sm" onClick={() => downloadResume(r.id, r.filename)}>Download</GlassButton>

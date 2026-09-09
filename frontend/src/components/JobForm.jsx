@@ -26,7 +26,7 @@ function SkillChipInput({ label, skills, onChange }) {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add() } }}
-          placeholder="e.g. python — press Enter to add"
+          placeholder="e.g. python, press Enter to add"
         />
         <GlassButton variant="secondary" onClick={add} aria-label={`Add ${label}`}><PlusIcon size={16} /></GlassButton>
       </div>

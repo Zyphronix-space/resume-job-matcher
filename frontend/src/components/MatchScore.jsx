@@ -59,7 +59,7 @@ export default function MatchScore({ score }) {
         <h2 className="score-summary-headline">{SUMMARY_HEADLINE[label]}</h2>
         <p className="score-summary-body">{SUMMARY_BODY[label]}</p>
         <p className="score-summary-meta">
-          <strong>Semantic match</strong> — based on semantic similarity between your resume and the job description.
+          <strong>Semantic match</strong>: based on semantic similarity between your resume and the job description.
         </p>
         <button type="button" className="explain-score-btn" onClick={() => setExplainOpen(true)}>
           Explain my score

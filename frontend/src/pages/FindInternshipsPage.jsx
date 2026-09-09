@@ -203,7 +203,7 @@ export default function FindInternshipsPage({
       {recommended.length > 0 && (
         <div className="panel">
           <h2 className="panel-title">Recommended for you</h2>
-          <p className="panel-subtitle">Ranked using explainable signals — see exactly why below.</p>
+          <p className="panel-subtitle">Ranked using explainable signals. See exactly why below.</p>
           <div className="recommend-list">
             {recommended.map((job) => (
               <div key={job.id} className="recommend-item">

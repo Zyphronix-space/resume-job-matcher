@@ -60,14 +60,14 @@ export default function ReportsPage() {
 
       <GlassCard
         title="Job matching reports"
-        subtitle="One report per job — every candidate, their match score, and skill breakdown. For a side-by-side candidate comparison export, use the Compare action on a job's Candidates tab."
+        subtitle="One report per job: every candidate, their match score, and skill breakdown. For a side-by-side candidate comparison export, use the Compare action on a job's Candidates tab."
       >
         {jobs && jobs.length === 0 && <GlassEmptyState title="No jobs yet" />}
         {jobs && jobs.length > 0 && (
           <ul className="note-list">
             {jobs.map((j) => (
               <li className="note-item" key={j.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.8rem', flexWrap: 'wrap' }}>
-                <span>{j.title} — {j.applicants_count} applicant{j.applicants_count === 1 ? '' : 's'}</span>
+                <span>{j.title}: {j.applicants_count} applicant{j.applicants_count === 1 ? '' : 's'}</span>
                 <div className="data-table-actions">
                   <GlassButton variant="secondary" size="sm" onClick={() => downloadJobReport(j.id, j.title)}>CSV</GlassButton>
                   <GlassButton variant="secondary" size="sm" disabled={busyId === j.id} onClick={() => handleJobPdf(j)}>

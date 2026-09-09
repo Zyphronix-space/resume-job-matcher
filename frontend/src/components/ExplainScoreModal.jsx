@@ -40,7 +40,7 @@ export default function ExplainScoreModal({ onClose }) {
 
         <h2 className="panel-title">How your score works</h2>
         <p className="panel-subtitle">
-          This isn't a black box — here's exactly what happens to your resume and the job description.
+          This isn't a black box. Here's exactly what happens to your resume and the job description.
         </p>
 
         <div className="flow-columns">
@@ -51,11 +51,11 @@ export default function ExplainScoreModal({ onClose }) {
         <div className="modal-explain-text">
           <p>
             The semantic score measures how similar the meaning of your resume and the job description is,
-            using sentence embeddings — it doesn't check for specific skills.
+            using sentence embeddings. It doesn't check for specific skills.
           </p>
           <p>
             Skill matching checks whether skills from the curated taxonomy appear in the extracted text of
-            both documents, using word-boundary matching — not a machine-learning classifier.
+            both documents, using word-boundary matching, not a machine-learning classifier.
           </p>
           <p className="modal-disclaimer">
             The score is not a probability of getting hired. It's a measure of textual and skill overlap to

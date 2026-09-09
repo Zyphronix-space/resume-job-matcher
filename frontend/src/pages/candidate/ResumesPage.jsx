@@ -51,6 +51,10 @@ export default function ResumesPage() {
       <GlassCard style={{ marginBottom: '1.2rem' }}>
         <UploadPanel file={file} onFileSelect={setFile} onFileRemove={() => setFile(null)} disabled={uploading} />
         {error && <p className="field-error">{error}</p>}
+        <p className="form-hint">
+          Your resume is stored so recruiters can review it for jobs you apply to. See the{' '}
+          <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a> for details, and delete it here any time.
+        </p>
         <div className="form-actions">
           <GlassButton variant="primary" disabled={!file || uploading} onClick={handleUpload}>
             {uploading ? 'Uploading…' : 'Upload resume'}

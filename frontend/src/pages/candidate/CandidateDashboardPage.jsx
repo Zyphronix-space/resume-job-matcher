@@ -57,7 +57,7 @@ export default function CandidateDashboardPage() {
             <ul className="note-list">
               {matches.slice(0, 5).map((m) => (
                 <li className="note-item" key={m.job.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.6rem' }}>
-                  <span>{m.job.title} — {Math.round(m.match_score)}% match</span>
+                  <span>{m.job.title}: {Math.round(m.match_score)}% match</span>
                   {m.already_applied && <GlassBadge status={m.application_status} />}
                 </li>
               ))}

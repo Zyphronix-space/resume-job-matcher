@@ -6,7 +6,7 @@ export default function AboutPage() {
         RecruitAI is a recruitment workspace built around one explainable NLP pipeline: sentence-embedding
         semantic similarity for overall match, plus curated skill-taxonomy detection for matched/missing
         skills, importance, and evidence. The same pipeline scores every candidate against every job, so
-        rankings, shortlists, and analytics are all grounded in the same, auditable numbers — not a
+        rankings, shortlists, and analytics are all grounded in the same, auditable numbers, not a
         black-box "AI score."
       </p>
       <p className="hero-subtitle" style={{ margin: '1rem 0 0', maxWidth: 'none', textAlign: 'left' }}>

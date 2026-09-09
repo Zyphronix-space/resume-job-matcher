@@ -37,7 +37,7 @@ export default function AnalyticsPage() {
     <>
       <section className="hero" style={{ padding: '1.5rem 0' }}>
         <h1 className="hero-title" style={{ fontSize: '2rem' }}>Analytics</h1>
-        <p className="hero-subtitle">Computed live from your jobs and applications — nothing here is estimated.</p>
+        <p className="hero-subtitle">Computed live from your jobs and applications. Nothing here is estimated.</p>
       </section>
 
       <div className="form-grid cols-2">

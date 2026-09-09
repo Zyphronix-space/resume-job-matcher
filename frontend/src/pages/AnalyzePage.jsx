@@ -127,7 +127,7 @@ export default function AnalyzePage({
               <section className="hero">
                 <h1 className="hero-title">Find your match.</h1>
                 <p className="hero-subtitle">
-                  See where your resume aligns with the role — and exactly what skills you could improve.
+                  See where your resume aligns with the role, and exactly what skills you could improve.
                 </p>
               </section>
 

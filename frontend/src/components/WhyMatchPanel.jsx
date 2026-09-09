@@ -27,7 +27,7 @@ export default function WhyMatchPanel({ job, matchResult, preferences, title = '
       )}
       <p className="why-match-disclaimer">
         The semantic match measures similarity between your resume and this job description using
-        sentence embeddings — it doesn't measure your actual ability, and it isn't a prediction of
+        sentence embeddings. It doesn't measure your actual ability, and it isn't a prediction of
         getting hired.
       </p>
     </div>

@@ -23,7 +23,7 @@ export default function RecruiterDashboardPage() {
     <>
       <section className="hero">
         <h1 className="hero-title">Welcome back{user.full_name ? `, ${user.full_name.split(' ')[0]}` : ''}</h1>
-        <p className="hero-subtitle">Your recruitment overview — built from your own jobs and applications.</p>
+        <p className="hero-subtitle">Your recruitment overview, built from your own jobs and applications.</p>
       </section>
 
       {error && <p className="field-error">{error}</p>}
@@ -50,7 +50,7 @@ export default function RecruiterDashboardPage() {
                   {overview.recent_candidates.map((c) => (
                     <li className="note-item" key={c.application_id}>
                       <Link to={`/candidates/${c.candidate_id}`}>{c.candidate_name}</Link> applied to{' '}
-                      <Link to={`/jobs/${c.job_id}`}>{c.job_title}</Link> — {Math.round(c.match_score)}% match
+                      <Link to={`/jobs/${c.job_id}`}>{c.job_title}</Link>: {Math.round(c.match_score)}% match
                     </li>
                   ))}
                 </ul>
@@ -79,7 +79,7 @@ export default function RecruiterDashboardPage() {
               <ul className="note-list">
                 {overview.top_matches.map((m) => (
                   <li className="note-item" key={m.application_id}>
-                    <Link to={`/candidates/${m.candidate_id}`}>{m.candidate_name}</Link> — {Math.round(m.match_score)}% for{' '}
+                    <Link to={`/candidates/${m.candidate_id}`}>{m.candidate_name}</Link>: {Math.round(m.match_score)}% for{' '}
                     <Link to={`/jobs/${m.job_id}`}>{m.job_title}</Link>
                   </li>
                 ))}

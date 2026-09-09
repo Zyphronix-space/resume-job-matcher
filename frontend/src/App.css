@@ -1775,6 +1775,68 @@ select option {
 .admin-row-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
 /* ============================================================
+   Site footer
+   ============================================================ */
+
+.site-footer {
+  border-top: 1px solid var(--border);
+  margin-top: 2rem;
+}
+.site-footer-inner {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 1.4rem 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+.site-footer-copy { color: var(--text-muted); font-size: 0.82rem; }
+.site-footer-links { display: flex; flex-wrap: wrap; gap: 1.1rem; font-size: 0.82rem; }
+.site-footer-links a { color: var(--text-secondary); text-decoration: none; }
+.site-footer-links a:hover { color: var(--text); text-decoration: underline; }
+
+/* ============================================================
+   Legal pages (Privacy Policy, Terms of Service)
+   ============================================================ */
+
+.legal-page {
+  max-width: 68ch;
+  margin: 0 auto;
+  padding: 2.5rem 0 4rem;
+  line-height: 1.6;
+}
+.legal-page .legal-title { font-size: 2rem; text-align: left; }
+.legal-page .legal-updated { color: var(--text-muted); font-size: 0.85rem; margin: 0.3rem 0 1.8rem; }
+.legal-page h2 { font-size: 1.1rem; font-weight: 700; margin: 1.8rem 0 0.6rem; }
+.legal-page p { color: var(--text-secondary); margin: 0.6rem 0; }
+.legal-page ul { color: var(--text-secondary); padding-left: 1.3rem; margin: 0.6rem 0; }
+.legal-page li { margin: 0.35rem 0; }
+.legal-page a { color: var(--accent); }
+.legal-page .legal-disclaimer {
+  margin-top: 2.2rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+/* ============================================================
+   Sidebar legal links
+   ============================================================ */
+
+.glass-sidebar-legal {
+  display: flex;
+  gap: 0.9rem;
+  justify-content: center;
+  margin-top: 0.6rem;
+  font-size: 0.75rem;
+}
+.glass-sidebar-legal a { color: var(--text-muted); text-decoration: none; }
+.glass-sidebar-legal a:hover { color: var(--text); text-decoration: underline; }
+
+/* ============================================================
    RecruitAI: public marketing header
    ============================================================ */
 

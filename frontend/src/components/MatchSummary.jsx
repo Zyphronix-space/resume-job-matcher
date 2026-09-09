@@ -52,7 +52,7 @@ export default function MatchSummary({ result, showRoadmap = false }) {
             <ul className="skill-check-list">
               {result.missing_skills.map((s) => <li key={s} className="is-missing">⚠ {skillLabel(s)}</li>)}
             </ul>
-          ) : <p className="skill-empty">None — every detected skill is covered</p>}
+          ) : <p className="skill-empty">None. Every detected skill is covered</p>}
         </div>
       </div>
 

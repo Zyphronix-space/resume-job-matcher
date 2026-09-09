@@ -7,7 +7,7 @@ export default function SkillGapRoadmap({ roadmap }) {
       <div className="panel">
         <h2 className="panel-title">Skill gap roadmap</h2>
         <p className="skill-empty">
-          No skill gaps detected — every taxonomy skill found in the job description was also found in your
+          No skill gaps detected. Every taxonomy skill found in the job description was also found in your
           resume.
         </p>
       </div>

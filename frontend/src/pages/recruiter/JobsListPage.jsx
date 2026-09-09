@@ -65,7 +65,7 @@ export default function JobsListPage() {
             {jobs.map((j) => (
               <tr key={j.id}>
                 <td data-label="Title"><Link to={`/jobs/${j.id}`}>{j.title}</Link></td>
-                <td data-label="Location">{j.location || '—'}</td>
+                <td data-label="Location">{j.location || 'N/A'}</td>
                 <td data-label="Type">{j.employment_type}</td>
                 <td data-label="Status"><GlassBadge status={j.status} /></td>
                 <td data-label="Applicants">{j.applicants_count}</td>

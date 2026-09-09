@@ -105,7 +105,7 @@ def forgot_password(payload: ForgotPasswordIn, db: Session = Depends(get_db)):
     # labels this clearly as demo mode rather than claiming an email was sent.
     return ForgotPasswordOut(
         reset_token=reset.token,
-        detail="No email service is configured — use this reset link directly (demo mode).",
+        detail="No email service is configured. Use this reset link directly (demo mode).",
     )
 
 

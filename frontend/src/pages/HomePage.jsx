@@ -64,13 +64,13 @@ export default function HomePage({ jobs, matches, applications, savedCount, onOp
       <div className="panel">
         <h2 className="panel-title">Application activity</h2>
         {activity.length === 0 ? (
-          <p className="skill-empty">Nothing yet — save or prepare an internship to start your timeline.</p>
+          <p className="skill-empty">Nothing yet. Save or prepare an internship to start your timeline.</p>
         ) : (
           <ol className="application-timeline home-activity-timeline">
             {activity.map((event, i) => (
               <li key={i}>
                 <span className="application-timeline-date">{formatDate(event.date)}</span>
-                <span>{event.label} — {event.title} at {event.company}</span>
+                <span>{event.label}: {event.title} at {event.company}</span>
               </li>
             ))}
           </ol>

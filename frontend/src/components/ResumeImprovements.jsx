@@ -7,12 +7,12 @@ export default function ResumeImprovements({ result }) {
     <div className="panel">
       <h2 className="panel-title">Resume improvements</h2>
       <p className="panel-subtitle">
-        Suggestions based only on what was actually detected — never a claim about skills you don't have.
+        Suggestions based only on what was actually detected, never a claim about skills you don't have.
       </p>
 
       {suggestions.length === 0 ? (
         <p className="skill-empty">
-          No specific suggestions — your resume's structure and detected skills line up well with this job
+          No specific suggestions. Your resume's structure and detected skills line up well with this job
           description.
         </p>
       ) : (

@@ -22,7 +22,7 @@ export default function ExplainabilityCard() {
     <div className="panel explain-card">
       <h2 className="panel-title">How your score works</h2>
       <p className="panel-subtitle">
-        This isn't a black box — here's exactly what happens to your resume and the job description.
+        This isn't a black box. Here's exactly what happens to your resume and the job description.
       </p>
 
       <div className="flow-columns">

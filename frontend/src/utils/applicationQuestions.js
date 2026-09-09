@@ -32,5 +32,5 @@ export function generateAnswerDraft(question, { company, role, matchedSkills }) 
   const template = TEMPLATES.find((t) => t.pattern.test(question))
   if (template) return template.build(ctx)
 
-  return `[Draft] Consider mentioning your experience with ${topSkills.length ? topSkills.join(', ') : 'skills relevant to this role'} here — please replace this placeholder with your own specific answer.`
+  return `[Draft] Consider mentioning your experience with ${topSkills.length ? topSkills.join(', ') : 'skills relevant to this role'} here. Please replace this placeholder with your own specific answer.`
 }
