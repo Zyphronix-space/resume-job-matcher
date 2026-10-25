@@ -1,11 +1,17 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import Logo from '../components/Logo.jsx'
-import GlassCard from '../components/glass/GlassCard.jsx'
 import GlassButton from '../components/glass/GlassButton.jsx'
 import GlassInput from '../components/glass/GlassInput.jsx'
 import GlassCheckbox from '../components/glass/GlassCheckbox.jsx'
+import PasswordInput from '../components/PasswordInput.jsx'
+import { WarningIcon } from '../components/icons.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
+import { MIN_PASSWORD_LENGTH, validateEmail, validateNewPassword, validatePasswordConfirmation } from '../utils/validation.js'
+
+const ROLES = [
+  { value: 'candidate', label: 'Candidate', hint: 'Upload a resume and see how you match open roles.' },
+  { value: 'recruiter', label: 'Recruiter', hint: 'Post jobs and review ranked applicants.' },
+]
 
 // "Continue with Google" is intentionally not rendered: no OAuth client is
 // configured on the backend, so a Google button here would be a fake
@@ -20,85 +26,121 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [role, setRole] = useState('candidate')
   const [agreed, setAgreed] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState({})
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
+
+  const clearError = (field) => setFieldErrors((f) => (f[field] ? { ...f, [field]: null } : f))
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError(null)
 
-    if (password !== confirmPassword) {
-      setError('Passwords do not match')
-      return
+    const errors = {
+      fullName: fullName.trim() ? null : 'Enter your full name.',
+      email: validateEmail(email),
+      password: validateNewPassword(password),
+      confirmPassword: validatePasswordConfirmation(password, confirmPassword),
+      agreed: agreed ? null : 'Agree to the Terms of Service and Privacy Policy to continue.',
     }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters')
-      return
-    }
-    if (!agreed) {
-      setError('You need to agree to the Terms of Service and Privacy Policy to create an account')
+    setFieldErrors(errors)
+    const firstInvalid = Object.keys(errors).find((k) => errors[k])
+    if (firstInvalid) {
+      document.querySelector(`[data-field="${firstInvalid}"]`)?.focus()
       return
     }
 
     setLoading(true)
     try {
-      const user = await signup({ fullName, email, password, role })
+      const user = await signup({ fullName: fullName.trim(), email: email.trim(), password, role })
       navigate(user.role === 'recruiter' ? '/dashboard' : '/candidate/dashboard', { replace: true })
     } catch (err) {
       setError(err.message)
-    } finally {
       setLoading(false)
     }
   }
 
+  const activeRole = ROLES.find((r) => r.value === role)
+
   return (
-    <div className="auth-page">
-      <GlassCard className="auth-card">
-        <div className="auth-brand">
-          <Logo size={34} />
-          <span>RecruitAI</span>
-        </div>
-        <p className="hero-subtitle auth-tagline">Create your recruiter or candidate account.</p>
+    <div className="auth-panel">
+      <div className="auth-heading">
+        <h1>Create your account</h1>
+        <p>Choose how you’ll use ResumeMatch. You can’t switch roles later.</p>
+      </div>
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="mode-tabs auth-mode-tabs">
-            <button type="button" className={`mode-tab ${role === 'candidate' ? 'is-active' : ''}`} onClick={() => setRole('candidate')}>
-              I'm a candidate
-            </button>
-            <button type="button" className={`mode-tab ${role === 'recruiter' ? 'is-active' : ''}`} onClick={() => setRole('recruiter')}>
-              I'm a recruiter
-            </button>
+      <form onSubmit={handleSubmit} className="auth-form" noValidate>
+        {error && (
+          <div className="form-alert is-error" role="alert">
+            <WarningIcon size={16} />
+            <span>{error}</span>
           </div>
+        )}
 
-          <GlassInput label="Full name" required value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Jane Perera" />
-          <GlassInput label="Email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
-          <GlassInput label="Password" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" />
-          <GlassInput label="Confirm password" type="password" required minLength={8} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter your password" />
+        <div className="glass-field">
+          <fieldset className="segmented" aria-describedby="role-hint">
+            <legend className="visually-hidden">Account type</legend>
+            {ROLES.map((r) => (
+              <label className="segmented-option" key={r.value}>
+                <input type="radio" name="role" value={r.value} checked={role === r.value} onChange={() => setRole(r.value)} />
+                <span>{r.label}</span>
+              </label>
+            ))}
+          </fieldset>
+          <span className="glass-field-hint" id="role-hint">{activeRole.hint}</span>
+        </div>
 
+        <GlassInput
+          label="Full name" autoComplete="name" data-field="fullName"
+          value={fullName} onChange={(e) => { setFullName(e.target.value); clearError('fullName') }}
+          error={fieldErrors.fullName}
+        />
+        <GlassInput
+          label="Email" type="email" autoComplete="email" inputMode="email" data-field="email"
+          value={email} onChange={(e) => { setEmail(e.target.value); clearError('email') }}
+          error={fieldErrors.email}
+        />
+        <PasswordInput
+          label="Password" autoComplete="new-password" data-field="password" maxLength={128}
+          hint={`At least ${MIN_PASSWORD_LENGTH} characters.`}
+          value={password} onChange={(e) => { setPassword(e.target.value); clearError('password') }}
+          error={fieldErrors.password}
+        />
+        <PasswordInput
+          label="Confirm password" autoComplete="new-password" data-field="confirmPassword" maxLength={128}
+          value={confirmPassword} onChange={(e) => { setConfirmPassword(e.target.value); clearError('confirmPassword') }}
+          error={fieldErrors.confirmPassword}
+        />
+
+        <div className="glass-field">
           <GlassCheckbox
             checked={agreed}
-            onChange={(e) => setAgreed(e.target.checked)}
+            data-field="agreed"
+            aria-invalid={fieldErrors.agreed ? true : undefined}
+            aria-describedby={fieldErrors.agreed ? 'agreed-error' : undefined}
+            onChange={(e) => { setAgreed(e.target.checked); clearError('agreed') }}
             label={(
               <>
                 I agree to the{' '}
-                <Link to="/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>Terms of Service</Link>
+                <Link to="/terms" target="_blank" rel="noopener noreferrer">Terms of Service</Link>
                 {' '}and{' '}
-                <Link to="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>Privacy Policy</Link>
+                <Link to="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</Link>
               </>
             )}
           />
+          {fieldErrors.agreed && (
+            <span className="glass-field-error" id="agreed-error"><WarningIcon size={14} />{fieldErrors.agreed}</span>
+          )}
+        </div>
 
-          {error && <p className="glass-field-error">{error}</p>}
+        <GlassButton type="submit" variant="primary" size="lg" block loading={loading} loadingText="Creating account…">
+          Create account
+        </GlassButton>
+      </form>
 
-          <GlassButton type="submit" variant="primary" block disabled={loading}>
-            {loading ? 'Please wait…' : 'Create account'}
-          </GlassButton>
-        </form>
-
-        <p className="auth-switch">
-          Already have an account? <Link to="/login" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>Sign in</Link>
-        </p>
-      </GlassCard>
+      <p className="auth-switch">
+        Already have an account? <Link to="/login" className="text-link">Sign in</Link>
+      </p>
     </div>
   )
 }

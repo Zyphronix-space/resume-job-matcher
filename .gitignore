@@ -9,5 +9,10 @@ resume_storage/
 node_modules/
 dist/
 
+# Local environment files hold secrets; only the placeholder examples are tracked
 .env
-.env.production
+.env.*
+*.local
+!.env.example
+*.pem
+*.key

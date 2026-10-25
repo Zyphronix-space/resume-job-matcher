@@ -83,7 +83,17 @@ def test_change_password_flow(client, candidate):
     assert login.status_code == 200
 
 
-def test_forgot_and_reset_password(client, candidate):
+def test_forgot_password_does_not_disclose_token_by_default(client, candidate, monkeypatch):
+    monkeypatch.delenv("PASSWORD_RESET_DEMO_MODE", raising=False)
+    known = client.post("/auth/forgot-password", json={"email": "candidate@example.com"})
+    unknown = client.post("/auth/forgot-password", json={"email": "nobody@example.com"})
+    assert known.status_code == unknown.status_code == 200
+    assert known.json()["reset_token"] is None
+    assert known.json() == unknown.json()
+
+
+def test_forgot_and_reset_password(client, candidate, monkeypatch):
+    monkeypatch.setenv("PASSWORD_RESET_DEMO_MODE", "1")
     forgot = client.post("/auth/forgot-password", json={"email": "candidate@example.com"})
     assert forgot.status_code == 200
     token = forgot.json()["reset_token"]
@@ -99,7 +109,8 @@ def test_forgot_and_reset_password(client, candidate):
     assert reuse.status_code == 400
 
 
-def test_forgot_password_unknown_email_does_not_leak(client):
+def test_forgot_password_unknown_email_does_not_leak(client, monkeypatch):
+    monkeypatch.setenv("PASSWORD_RESET_DEMO_MODE", "1")
     res = client.post("/auth/forgot-password", json={"email": "nobody@example.com"})
     assert res.status_code == 200
     assert res.json()["reset_token"] is None

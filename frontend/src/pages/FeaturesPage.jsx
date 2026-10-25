@@ -1,42 +1,57 @@
-import GlassCard from '../components/glass/GlassCard.jsx'
+import { Link } from 'react-router-dom'
+import GlassButton from '../components/glass/GlassButton.jsx'
 
-const FEATURES = [
+const SECTIONS = [
   {
-    title: 'Semantic matching, not keyword spam',
-    body: 'Every match score comes from sentence-embedding cosine similarity (all-MiniLM-L6-v2) between a resume and a job description, the same explainable pipeline for every candidate.',
+    title: 'Match score',
+    body: 'The resume and the job description are each encoded with the all-MiniLM-L6-v2 sentence-embedding model, and the score is their cosine similarity on a 0 to 100 scale. Every resume is scored against every job the same way, so rankings are consistent.',
   },
   {
-    title: 'Explainable skill matching',
-    body: 'Matched and missing skills are detected against a curated taxonomy, with importance levels, category grouping, and evidence snippets pulled straight from the resume text.',
+    title: 'Skill coverage',
+    body: 'Skills are detected in both documents against a curated taxonomy, plus any skills a recruiter tags on the job. Coverage is the share of the job’s skills that also appear in the resume. It is reported separately from the match score.',
   },
   {
-    title: 'A real pipeline, not a spreadsheet',
-    body: 'Applied → Screening → Interview → Offer, plus a one-click Shortlist/Reject. Every status change is timestamped in an audit trail.',
+    title: 'Importance and evidence',
+    body: 'Each skill in the job gets an importance level based on how often it appears and whether it sits in a requirements section. For skills the resume has, ResumeMatch shows which resume section it came from and the sentence it was found in.',
   },
   {
-    title: 'Recruiter analytics grounded in your data',
-    body: 'Pipeline counts, score distributions, and skills demand are computed live from your own jobs and applications, never estimated or invented.',
+    title: 'Skill gap order',
+    body: 'Missing skills are listed by importance, and skills with a known prerequisite are placed after it. This is a simple rule-based ordering, not personalized career advice.',
+  },
+  {
+    title: 'Recruiter pipeline',
+    body: 'Applications move through Applied, Screening, Interview, and Offer, or are shortlisted or rejected. Recruiters can add notes, compare candidates, and export CSV or PDF reports built from the same data.',
+  },
+  {
+    title: 'Analytics',
+    body: 'Pipeline counts, score distributions, and the most-requested skills are calculated from a recruiter’s own jobs and applications when the page loads. Nothing is estimated.',
   },
 ]
 
 export default function FeaturesPage() {
   return (
-    <>
-      <section className="hero">
-        <h1 className="hero-title">Built on one explainable matching engine</h1>
-        <p className="hero-subtitle">
-          Everything in RecruitAI (candidate ranking, shortlisting, analytics) is a view over the same
-          resume/job matching pipeline. No hidden model, no fabricated "AI" scoring.
+    <article className="prose-page">
+      <header className="prose-header">
+        <h1 className="display-title is-small">How matching works</h1>
+        <p className="lede">
+          Everything in ResumeMatch, from a candidate’s match list to a recruiter’s ranking, comes from one
+          matching pipeline. Here is what each number means.
         </p>
-      </section>
+      </header>
 
-      <div className="feature-grid">
-        {FEATURES.map((f) => (
-          <GlassCard key={f.title} title={f.title}>
-            <p className="glass-card-subtitle">{f.body}</p>
-          </GlassCard>
+      <dl className="definition-list">
+        {SECTIONS.map((s) => (
+          <div key={s.title} className="definition-row">
+            <dt>{s.title}</dt>
+            <dd>{s.body}</dd>
+          </div>
         ))}
+      </dl>
+
+      <div className="prose-cta">
+        <p>The score is a similarity measure. It helps sort and explain, but it can’t tell you whether someone will be hired.</p>
+        <GlassButton as={Link} to="/signup" variant="primary">Create an account</GlassButton>
       </div>
-    </>
+    </article>
   )
 }

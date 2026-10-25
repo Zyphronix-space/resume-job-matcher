@@ -1,18 +1,17 @@
-import { NavLink } from 'react-router-dom'
-import Logo from '../Logo.jsx'
+import { Link, NavLink } from 'react-router-dom'
+import { Wordmark } from '../Logo.jsx'
 
-export default function GlassSidebar({ links, footer }) {
+export default function GlassSidebar({ links, footer, homeTo = '/' }) {
   return (
     <aside className="glass-sidebar">
-      <div className="glass-sidebar-brand">
-        <Logo size={26} />
-        <span>RecruitAI</span>
-      </div>
+      <Link to={homeTo} className="glass-sidebar-brand" aria-label="ResumeMatch dashboard">
+        <Wordmark size={20} />
+      </Link>
 
       <nav className="glass-sidebar-nav" aria-label="Main">
         {links.map(({ to, label, Icon }) => (
           <NavLink key={to} to={to} className={({ isActive }) => `glass-sidebar-link ${isActive ? 'is-active' : ''}`}>
-            <Icon size={19} />
+            <Icon size={18} />
             <span>{label}</span>
           </NavLink>
         ))}

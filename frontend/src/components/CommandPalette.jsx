@@ -6,18 +6,18 @@ import {
 } from './icons.jsx'
 
 const RECRUITER_COMMANDS = [
-  { id: 'create-job', label: 'Create Job', hint: 'Post a new job opening', Icon: BriefcaseIcon, to: '/jobs' },
-  { id: 'search-candidate', label: 'Search Candidate', hint: 'Browse your candidate directory', Icon: PeopleIcon, to: '/candidates' },
-  { id: 'search-job', label: 'Search Job', hint: 'Browse your job postings', Icon: SearchIcon, to: '/jobs' },
-  { id: 'open-shortlist', label: 'Open Shortlist', hint: 'Shortlisted candidates by job', Icon: NoteIcon, to: '/shortlists' },
+  { id: 'create-job', label: 'New job', hint: 'Post a job opening', Icon: BriefcaseIcon, to: '/jobs' },
+  { id: 'search-candidate', label: 'Candidates', hint: 'Everyone who applied to your jobs', Icon: PeopleIcon, to: '/candidates' },
+  { id: 'search-job', label: 'Jobs', hint: 'Your job postings', Icon: SearchIcon, to: '/jobs' },
+  { id: 'open-shortlist', label: 'Shortlist', hint: 'Shortlisted candidates by job', Icon: NoteIcon, to: '/shortlists' },
   { id: 'analytics', label: 'Analytics', hint: 'Pipeline and match analytics', Icon: ChartIcon, to: '/analytics' },
   { id: 'settings', label: 'Settings', hint: 'Profile and account security', Icon: SettingsIcon, to: '/settings' },
 ]
 
 const CANDIDATE_COMMANDS = [
-  { id: 'upload-resume', label: 'Upload Resume', hint: 'Manage your resumes', Icon: DocumentIcon, to: '/resumes' },
-  { id: 'search-job', label: 'Search Job', hint: 'See your ranked job matches', Icon: SearchIcon, to: '/matches' },
-  { id: 'applications', label: 'My Applications', hint: 'Track your applications', Icon: TrackIcon, to: '/candidate/dashboard' },
+  { id: 'upload-resume', label: 'Upload a resume', hint: 'Manage your resumes', Icon: DocumentIcon, to: '/resumes' },
+  { id: 'search-job', label: 'Matches', hint: 'Open roles ranked against your resume', Icon: SearchIcon, to: '/matches' },
+  { id: 'applications', label: 'Applications', hint: 'Your applications and their status', Icon: TrackIcon, to: '/candidate/dashboard' },
   { id: 'settings', label: 'Settings', hint: 'Profile and account security', Icon: SettingsIcon, to: '/settings' },
 ]
 
@@ -66,7 +66,7 @@ export default function CommandPalette({ open, onClose }) {
         className="glass-modal command-palette"
         role="dialog"
         aria-modal="true"
-        aria-label="Command palette"
+        aria-label="Quick actions"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={handleKeyDown}
       >
@@ -75,11 +75,11 @@ export default function CommandPalette({ open, onClose }) {
           className="command-palette-input"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Type a command…"
-          aria-label="Command palette search"
+          placeholder="Go to…"
+          aria-label="Search quick actions"
         />
         <ul className="command-palette-list">
-          {filtered.length === 0 && <li className="command-palette-empty">No matching commands</li>}
+          {filtered.length === 0 && <li className="command-palette-empty">Nothing matches “{query}”</li>}
           {filtered.map((c, i) => (
             <li key={c.id}>
               <button

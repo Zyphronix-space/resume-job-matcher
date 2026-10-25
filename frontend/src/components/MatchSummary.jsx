@@ -5,56 +5,56 @@ import { interpretScore, SCORE_STATE_CLASS } from '../utils/score.js'
 
 // A neutral (no "your resume"/first-person) match breakdown, used anywhere
 // a score needs explaining regardless of who's looking at it: a candidate's
-// own match list, a recruiter ranking candidates for a job, a candidate
-// detail page, or a side-by-side comparison. The score and skill fields are
-// exactly what job_matcher.py computes — nothing here is generated text,
-// just a template sentence built from those real numbers.
+// own match list, a recruiter ranking candidates for a job, or a candidate
+// detail page. The numbers and skill lists are exactly what job_matcher.py
+// computes; the only generated text is a template sentence built from them.
 export default function MatchSummary({ result, showRoadmap = false }) {
   if (!result) return null
-  const label = interpretScore(result.match_score)
-  const total = result.matched_skills.length + result.missing_skills.length
+  const band = interpretScore(result.match_score)
+  const matched = result.matched_skills
+  const missing = result.missing_skills
+  const total = matched.length + missing.length
 
-  const summarySentence = (() => {
-    // Doesn't restate the label — that's already shown right above this
-    // sentence in the score header — just the supporting detail.
-    const base = `${result.matched_skills.length} of ${total} detected skills present`
-    if (result.missing_skills.length === 0) return `${base}.`
-    const shown = result.missing_skills.slice(0, 3).map(skillLabel).join(', ')
-    const more = result.missing_skills.length > 3 ? ', and more' : ''
-    return `${base}. Missing ${shown}${more}.`
+  const gapSentence = (() => {
+    if (total === 0) return 'No skills from the skills list were detected in this job description.'
+    if (missing.length === 0) return 'Every skill detected in the job was also found in the resume.'
+    const shown = missing.slice(0, 3).map(skillLabel).join(', ')
+    const more = missing.length > 3 ? ` and ${missing.length - 3} more` : ''
+    return `Not found in the resume: ${shown}${more}.`
   })()
 
   return (
     <div className="match-summary">
-      <div className={`match-summary-head ${SCORE_STATE_CLASS[label]}`}>
-        <span className="match-summary-score">{Math.round(result.match_score)}<span className="match-summary-score-max">/100</span></span>
-        <div>
-          <span className="match-summary-label">{label}</span>
-          {result.skill_coverage !== undefined && (
-            <span className="match-summary-coverage">{result.skill_coverage}% skill coverage</span>
+      <div className="match-head">
+        <div className={`match-score-block ${SCORE_STATE_CLASS[band]}`}>
+          <span className="match-score-label">Match score</span>
+          <span className="match-score num">{Math.round(result.match_score)}<span className="match-score-max">/100</span></span>
+          <span className="match-band"><span className="match-band-dot" aria-hidden="true" />{band}</span>
+        </div>
+
+        <div className="match-coverage">
+          <span className="match-score-label">
+            Skill coverage{total > 0 && <> <strong className="num">{matched.length} of {total}</strong></>}
+          </span>
+          {total > 0 && (
+            <div className="coverage" role="img" aria-label={`${matched.length} of ${total} job skills found in the resume`}>
+              {matched.map((s) => <span key={s} className="coverage-seg is-matched" />)}
+              {missing.map((s) => <span key={s} className="coverage-seg is-missing" />)}
+            </div>
           )}
-          <p className="match-summary-sentence">{summarySentence}</p>
+          <p className="match-coverage-sentence">{gapSentence}</p>
         </div>
       </div>
 
-      <div className="match-summary-skill-lists">
-        <div>
-          <h4>Matched Skills</h4>
-          {result.matched_skills.length ? (
-            <ul className="skill-check-list">
-              {result.matched_skills.map((s) => <li key={s} className="is-matched">✓ {skillLabel(s)}</li>)}
-            </ul>
-          ) : <p className="skill-empty">None detected</p>}
-        </div>
-        <div>
-          <h4>Missing Skills</h4>
-          {result.missing_skills.length ? (
-            <ul className="skill-check-list">
-              {result.missing_skills.map((s) => <li key={s} className="is-missing">⚠ {skillLabel(s)}</li>)}
-            </ul>
-          ) : <p className="skill-empty">None. Every detected skill is covered</p>}
-        </div>
-      </div>
+      <details className="score-explainer">
+        <summary>How these numbers are calculated</summary>
+        <p>
+          The match score compares the full resume text with the job description using sentence embeddings
+          (cosine similarity, 0 to 100). Skill coverage counts the job’s skills that also appear in the resume.
+          The label is a fixed band of the score. Both are sorting aids, not a prediction of whether someone
+          will be hired.
+        </p>
+      </details>
 
       <JobRequirements result={result} />
       {showRoadmap && <SkillGapRoadmap roadmap={result.skill_gap_roadmap} />}

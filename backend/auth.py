@@ -11,7 +11,9 @@ Deliberately dependency-light, matching the rest of this project:
   session table needed.
 
 SECRET_KEY must be set via the JWT_SECRET_KEY env var in any real
-deployment; the fallback below is fine for local/demo use only.
+deployment. The fallback below is for local development only; on Vercel
+(which sets VERCEL=1) a missing secret is a startup error rather than a
+silent fallback to a value that's public in this repository.
 """
 
 import hashlib
@@ -27,7 +29,11 @@ from sqlalchemy.orm import Session
 import db_models
 from database import get_db
 
-SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "dev-only-insecure-secret-change-me")
+SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
+if not SECRET_KEY:
+    if os.environ.get("VERCEL"):
+        raise RuntimeError("JWT_SECRET_KEY must be set in this deployment's environment variables")
+    SECRET_KEY = "dev-only-insecure-secret-change-me"
 ALGORITHM = "HS256"
 TOKEN_LIFETIME = timedelta(days=7)
 PBKDF2_ITERATIONS = 260_000

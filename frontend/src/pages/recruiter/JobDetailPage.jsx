@@ -8,53 +8,72 @@ import GlassSelect from '../../components/glass/GlassSelect.jsx'
 import GlassCandidateCard from '../../components/glass/GlassCandidateCard.jsx'
 import GlassCheckbox from '../../components/glass/GlassCheckbox.jsx'
 import GlassEmptyState from '../../components/glass/GlassEmptyState.jsx'
+import GlassModal from '../../components/glass/GlassModal.jsx'
 import { useToast } from '../../components/glass/GlassToast.jsx'
+import PageHeader from '../../components/PageHeader.jsx'
+import LoadingBlock from '../../components/LoadingBlock.jsx'
 import JobForm from '../../components/JobForm.jsx'
 import MatchSummary from '../../components/MatchSummary.jsx'
+import { WarningIcon } from '../../components/icons.jsx'
 import { skillLabel } from '../../utils/skillLabel.js'
 import { changeApplicationStatus, compareApplications, rankCandidatesForJob } from '../../utils/applications.js'
 import { deleteJob, getJob, updateJob } from '../../utils/jobs.js'
 import { downloadComparisonCsv, downloadJobReport } from '../../utils/analytics.js'
 
-const TABS = ['Overview', 'Requirements', 'Candidates', 'AI Matches', 'Shortlisted']
+const TABS = ['Overview', 'Candidates', 'Match breakdown', 'Shortlisted']
 const STATUSES = ['Applied', 'Screening', 'Interview', 'Offer', 'Shortlisted', 'Rejected']
 
 function CandidateRow({ app, onStatusChange, selected, onToggleSelect }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
-      <GlassCheckbox checked={selected} onChange={() => onToggleSelect(app.id)} aria-label={`Select ${app.candidate.full_name}`} />
-      <div style={{ flex: 1 }}>
-        <GlassCandidateCard
-          name={app.candidate.full_name}
-          meta={`${app.matched_skills.length} matched, ${app.missing_skills.length} missing skills`}
-          score={app.match_score}
-          actions={(
-            <>
-              <GlassSelect
-                className="status-select-glass" value={app.status} onChange={(status) => onStatusChange(app.id, status)}
-                options={STATUSES.map((s) => ({ value: s, label: s }))}
-              />
-              <GlassButton as={Link} to={`/candidates/${app.candidate.id}`} variant="secondary" size="sm">View</GlassButton>
+    <div className="selectable-row">
+      <GlassCheckbox checked={selected} onChange={() => onToggleSelect(app.id)} aria-label={`Select ${app.candidate.full_name} to compare`} />
+      <GlassCandidateCard
+        name={app.candidate.full_name}
+        meta={`${app.matched_skills.length} skills found, ${app.missing_skills.length} missing`}
+        score={app.match_score}
+        actions={(
+          <>
+            <GlassSelect
+              className="status-select-glass" value={app.status} onChange={(status) => onStatusChange(app.id, status)}
+              options={STATUSES.map((s) => ({ value: s, label: s }))}
+              ariaLabel={`Status for ${app.candidate.full_name}`}
+            />
+            <GlassButton as={Link} to={`/candidates/${app.candidate.id}`} variant="secondary" size="sm">Profile</GlassButton>
+            {app.status !== 'Shortlisted' && (
               <GlassButton variant="secondary" size="sm" onClick={() => onStatusChange(app.id, 'Shortlisted')}>Shortlist</GlassButton>
+            )}
+            {app.status !== 'Rejected' && (
               <GlassButton variant="danger" size="sm" onClick={() => onStatusChange(app.id, 'Rejected')}>Reject</GlassButton>
-            </>
-          )}
-        />
-      </div>
+            )}
+          </>
+        )}
+      />
     </div>
+  )
+}
+
+function SkillTags({ skills }) {
+  if (!skills.length) return <p className="skill-empty">None specified</p>
+  return (
+    <ul className="tag-list">
+      {skills.map((s) => <li key={s} className="tag">{skillLabel(s)}</li>)}
+    </ul>
   )
 }
 
 export default function JobDetailPage() {
   const { jobId } = useParams()
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const showToast = useToast()
   const [job, setJob] = useState(null)
-  const [candidates, setCandidates] = useState([])
+  const [candidates, setCandidates] = useState(null)
   const [error, setError] = useState(null)
-  const [tab, setTab] = useState(TABS.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'Overview')
   const [editing, setEditing] = useState(false)
+
+  const requestedTab = searchParams.get('tab')
+  const tab = TABS.includes(requestedTab) ? requestedTab : 'Overview'
+  const setTab = (t) => setSearchParams(t === 'Overview' ? {} : { tab: t }, { replace: true })
 
   const [sort, setSort] = useState('best_match')
   const [minScore, setMinScore] = useState('')
@@ -74,13 +93,17 @@ export default function JobDetailPage() {
       })
       .catch((err) => setError(err.message))
 
-  useEffect(() => { loadJob() }, [jobId])
+  useEffect(() => { loadJob() }, [jobId]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { loadCandidates() }, [jobId, sort, minScore, skillFilter, statusFilter]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleStatusChange = async (id, status) => {
-    await changeApplicationStatus(id, status)
-    showToast(`Status updated to ${status}`, 'success')
-    loadCandidates()
+    try {
+      await changeApplicationStatus(id, status)
+      showToast(`Moved to ${status}`, 'success')
+      loadCandidates()
+    } catch (err) {
+      showToast(err.message, 'error')
+    }
   }
 
   const toggleSelect = (id) => {
@@ -93,174 +116,217 @@ export default function JobDetailPage() {
   }
 
   const runCompare = async () => {
-    const results = await compareApplications([...selected])
-    setCompareResults(results)
+    try {
+      setCompareResults(await compareApplications([...selected]))
+    } catch (err) {
+      showToast(err.message, 'error')
+    }
   }
 
   const handleUpdate = async (payload) => {
     const updated = await updateJob(jobId, payload)
     setJob(updated)
     setEditing(false)
-    showToast('Job updated', 'success')
+    showToast('Job saved', 'success')
   }
 
   const handleDelete = async () => {
-    if (!window.confirm(`Delete "${job.title}"? This also removes its applications.`)) return
-    await deleteJob(jobId)
-    navigate('/jobs')
+    if (!window.confirm(`Delete “${job.title}”? Its applications are deleted too. This can’t be undone.`)) return
+    try {
+      await deleteJob(jobId)
+      showToast(`“${job.title}” deleted`, 'info')
+      navigate('/jobs')
+    } catch (err) {
+      showToast(err.message, 'error')
+    }
   }
 
-  const shortlisted = useMemo(() => candidates.filter((c) => c.status === 'Shortlisted'), [candidates])
-  const selectedMatch = candidates.find((c) => c.id === selectedMatchId) || null
+  const shortlisted = useMemo(() => (candidates || []).filter((c) => c.status === 'Shortlisted'), [candidates])
+  const selectedMatch = (candidates || []).find((c) => c.id === selectedMatchId) || null
+  const filtersActive = Boolean(minScore || skillFilter || statusFilter)
 
-  if (error) return <p className="field-error">{error}</p>
-  if (!job) return null
+  if (error && !job) {
+    return <p className="field-error" role="alert"><WarningIcon size={15} />{error}</p>
+  }
+  if (!job) return <LoadingBlock rows={4} label="Loading job" />
 
   return (
     <>
-      <section className="hero" style={{ padding: '1.2rem 0' }}>
-        <h1 className="hero-title" style={{ fontSize: '2rem' }}>{job.title}</h1>
-        <p className="hero-subtitle">{job.location || 'Location not set'} · {job.employment_type} · <GlassBadge status={job.status} /></p>
-      </section>
+      <p className="breadcrumb"><Link to="/jobs" className="text-link">Jobs</Link></p>
+      <PageHeader
+        title={job.title}
+        meta={(
+          <>
+            <GlassBadge status={job.status} />
+            <span>{job.location || 'Location not set'}</span>
+            <span>{job.employment_type}</span>
+          </>
+        )}
+        actions={(
+          <>
+            <GlassButton variant="secondary" onClick={() => setEditing(true)}>Edit job</GlassButton>
+            <GlassButton variant="danger" onClick={handleDelete}>Delete</GlassButton>
+          </>
+        )}
+      />
 
-      <div className="tabs">
+      {editing && (
+        <GlassModal title="Edit job" onClose={() => setEditing(false)} width={720}>
+          <JobForm initial={job} onSubmit={handleUpdate} onCancel={() => setEditing(false)} submitLabel="Save changes" />
+        </GlassModal>
+      )}
+
+      <div className="tabs" role="tablist" aria-label="Job sections">
         {TABS.map((t) => (
-          <button key={t} type="button" className={`tab-btn ${tab === t ? 'is-active' : ''}`} onClick={() => setTab(t)}>{t}</button>
+          <button
+            key={t}
+            type="button"
+            role="tab"
+            id={`tab-${t}`}
+            aria-selected={tab === t}
+            aria-controls={`panel-${t}`}
+            className={`tab-btn ${tab === t ? 'is-active' : ''}`}
+            onClick={() => setTab(t)}
+          >
+            {t}
+            {t === 'Candidates' && candidates && <span className="tab-count num">{candidates.length}</span>}
+            {t === 'Shortlisted' && candidates && <span className="tab-count num">{shortlisted.length}</span>}
+          </button>
         ))}
       </div>
 
-      {tab === 'Overview' && (
-        <GlassCard>
-          <div className="form-actions" style={{ justifyContent: 'flex-end' }}>
-            <GlassButton variant="secondary" onClick={() => setEditing((e) => !e)}>{editing ? 'Cancel edit' : 'Edit job'}</GlassButton>
-            <GlassButton variant="danger" onClick={handleDelete}>Delete job</GlassButton>
+      <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
+        {tab === 'Overview' && (
+          <div className="detail-grid">
+            <GlassCard title="Description">
+              <p className="prose-text">{job.description || 'No description yet. Add one so applicants can be scored against it.'}</p>
+            </GlassCard>
+            <GlassCard title="Requirements">
+              <dl className="facts">
+                <div><dt>Experience</dt><dd>{job.experience || 'Not specified'}</dd></div>
+                <div><dt>Education</dt><dd>{job.education || 'Not specified'}</dd></div>
+              </dl>
+              <h3 className="subheading">Required skills</h3>
+              <SkillTags skills={job.required_skills} />
+              <h3 className="subheading">Preferred skills</h3>
+              <SkillTags skills={job.preferred_skills} />
+            </GlassCard>
           </div>
-          {editing ? (
-            <JobForm initial={job} onSubmit={handleUpdate} onCancel={() => setEditing(false)} submitLabel="Save changes" />
-          ) : (
-            <>
-              <h2 className="glass-card-title">Description</h2>
-              <p className="glass-card-subtitle" style={{ whiteSpace: 'pre-wrap' }}>{job.description || 'No description provided.'}</p>
-            </>
-          )}
-        </GlassCard>
-      )}
+        )}
 
-      {tab === 'Requirements' && (
-        <GlassCard title="Requirements">
-          <dl className="tech-details-list" style={{ marginTop: '0.8rem' }}>
-            <div className="tech-details-row"><dt>Experience</dt><dd>{job.experience || 'Not specified'}</dd></div>
-            <div className="tech-details-row"><dt>Education</dt><dd>{job.education || 'Not specified'}</dd></div>
-          </dl>
-          <h3 className="roadmap-subheading">Required skills</h3>
-          <div className="chip-input-row">
-            {job.required_skills.length ? job.required_skills.map((s) => <span key={s} className="skill-pill skill-pill-matched">{skillLabel(s)}</span>) : <p className="skill-empty">None specified</p>}
-          </div>
-          <h3 className="roadmap-subheading" style={{ marginTop: '1rem' }}>Preferred skills</h3>
-          <div className="chip-input-row">
-            {job.preferred_skills.length ? job.preferred_skills.map((s) => <span key={s} className="skill-pill">{skillLabel(s)}</span>) : <p className="skill-empty">None specified</p>}
-          </div>
-        </GlassCard>
-      )}
-
-      {tab === 'Candidates' && (
-        <GlassCard>
-          <div className="form-grid cols-2" style={{ marginBottom: '1rem' }}>
-            <GlassInput label="Min score" type="number" min="0" max="100" value={minScore} onChange={(e) => setMinScore(e.target.value)} />
-            <GlassInput label="Skill contains" value={skillFilter} onChange={(e) => setSkillFilter(e.target.value)} placeholder="e.g. python" />
-            <GlassSelect
-              label="Status" value={statusFilter} onChange={setStatusFilter} placeholder="Any"
-              options={[{ value: '', label: 'Any' }, ...STATUSES.map((s) => ({ value: s, label: s }))]}
-            />
-            <GlassSelect
-              label="Sort by" value={sort} onChange={setSort}
-              options={[
-                { value: 'best_match', label: 'Best match' },
-                { value: 'newest', label: 'Newest' },
-                { value: 'experience', label: 'Experience (skills matched)' },
-              ]}
-            />
-          </div>
-
-          {selected.size >= 2 && (
-            <div className="form-actions">
-              <GlassButton variant="primary" onClick={runCompare}>Compare {selected.size} candidates</GlassButton>
+        {tab === 'Candidates' && (
+          <div className="stack">
+            <div className="filter-bar">
+              <GlassInput label="Minimum score" type="number" inputMode="numeric" min="0" max="100" value={minScore} onChange={(e) => setMinScore(e.target.value)} placeholder="0" />
+              <GlassInput label="Has skill" value={skillFilter} onChange={(e) => setSkillFilter(e.target.value)} placeholder="e.g. python" />
+              <GlassSelect
+                label="Status" value={statusFilter} onChange={setStatusFilter} placeholder="Any status"
+                options={[{ value: '', label: 'Any status' }, ...STATUSES.map((s) => ({ value: s, label: s }))]}
+              />
+              <GlassSelect
+                label="Sort by" value={sort} onChange={setSort}
+                options={[
+                  { value: 'best_match', label: 'Best match' },
+                  { value: 'newest', label: 'Newest' },
+                  { value: 'experience', label: 'Most skills found' },
+                ]}
+              />
             </div>
-          )}
 
-          {compareResults && (
-            <div className="compare-table-wrap" style={{ marginBottom: '1.2rem' }}>
-              <div className="form-actions" style={{ justifyContent: 'flex-end' }}>
-                <GlassButton variant="secondary" size="sm" onClick={() => downloadComparisonCsv(compareResults)}>Download comparison (CSV)</GlassButton>
+            {selected.size > 0 && (
+              <div className="selection-bar" role="status">
+                <span>{selected.size} selected{selected.size < 2 && '. Select one more to compare'}</span>
+                <div className="button-row">
+                  <GlassButton variant="ghost" size="sm" onClick={() => { setSelected(new Set()); setCompareResults(null) }}>Clear</GlassButton>
+                  <GlassButton variant="primary" size="sm" disabled={selected.size < 2} onClick={runCompare}>Compare {selected.size}</GlassButton>
+                </div>
               </div>
-              <table className="compare-table">
-                <thead><tr><th>Candidate</th><th>Match</th><th>Skills</th><th>Experience</th><th>Education</th><th>Status</th></tr></thead>
-                <tbody>
-                  {compareResults.map((a) => (
-                    <tr key={a.id}>
-                      <td>{a.candidate.full_name}</td>
-                      <td>{Math.round(a.match_score)}%</td>
-                      <td>{a.matched_skills.length} matched</td>
-                      <td>{a.job.experience || 'N/A'}</td>
-                      <td>{a.job.education || 'N/A'}</td>
-                      <td><GlassBadge status={a.status} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+            )}
 
-          {candidates.length === 0 ? (
-            <GlassEmptyState title="No candidates match these filters" />
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
-              {candidates.map((app) => (
-                <CandidateRow
-                  key={app.id}
-                  app={app}
-                  onStatusChange={handleStatusChange}
-                  selected={selected.has(app.id)}
-                  onToggleSelect={toggleSelect}
-                />
-              ))}
-            </div>
-          )}
-        </GlassCard>
-      )}
+            {compareResults && (
+              <GlassCard
+                title="Comparison"
+                actions={<GlassButton variant="secondary" size="sm" onClick={() => downloadComparisonCsv(compareResults)}>Download CSV</GlassButton>}
+              >
+                <div className="glass-table-wrap">
+                  <table className="glass-table">
+                    <thead><tr><th>Candidate</th><th>Match</th><th>Skills found</th><th>Missing</th><th>Status</th></tr></thead>
+                    <tbody>
+                      {compareResults.map((a) => (
+                        <tr key={a.id}>
+                          <td className="cell-strong">{a.candidate.full_name}</td>
+                          <td className="num">{Math.round(a.match_score)}</td>
+                          <td className="num">{a.matched_skills.length}</td>
+                          <td className="num">{a.missing_skills.length}</td>
+                          <td><GlassBadge status={a.status} /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </GlassCard>
+            )}
 
-      {tab === 'AI Matches' && (
-        <GlassCard>
-          <GlassSelect
-            label="Candidate" className="candidate-picker" value={selectedMatchId || ''} onChange={setSelectedMatchId}
-            options={candidates.map((a) => ({ value: a.id, label: `${a.candidate.full_name}: ${Math.round(a.match_score)}%` }))}
-          />
-          {selectedMatch ? <MatchSummary result={selectedMatch} /> : <GlassEmptyState title="No candidates to analyze yet" />}
-        </GlassCard>
-      )}
-
-      {tab === 'Shortlisted' && (
-        <GlassCard>
-          <div className="form-actions" style={{ justifyContent: 'flex-end' }}>
-            <GlassButton variant="secondary" onClick={() => downloadJobReport(jobId, job.title)}>Download report (CSV)</GlassButton>
+            {!candidates && <LoadingBlock rows={3} label="Ranking applicants" />}
+            {candidates && candidates.length === 0 && (
+              filtersActive
+                ? <GlassEmptyState title="No applicants match these filters" subtitle="Lower the minimum score or clear the skill and status filters." />
+                : <GlassEmptyState title="No applicants yet" subtitle="Candidates who apply to this job are scored and listed here, best match first." />
+            )}
+            {candidates && candidates.length > 0 && (
+              <div className="candidate-stack">
+                {candidates.map((app) => (
+                  <CandidateRow
+                    key={app.id}
+                    app={app}
+                    onStatusChange={handleStatusChange}
+                    selected={selected.has(app.id)}
+                    onToggleSelect={toggleSelect}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-          {shortlisted.length === 0 ? (
-            <GlassEmptyState title="No shortlisted candidates yet" subtitle="Shortlist a candidate from the Candidates tab." />
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
-              {shortlisted.map((a) => (
-                <GlassCandidateCard
-                  key={a.id}
-                  name={a.candidate.full_name}
-                  score={a.match_score}
-                  status={a.status}
-                  actions={<GlassButton as={Link} to={`/candidates/${a.candidate.id}`} variant="secondary" size="sm">View</GlassButton>}
+        )}
+
+        {tab === 'Match breakdown' && (
+          <GlassCard>
+            {candidates && candidates.length > 0 ? (
+              <>
+                <GlassSelect
+                  label="Applicant" className="candidate-picker" value={selectedMatchId || ''} onChange={setSelectedMatchId}
+                  options={candidates.map((a) => ({ value: a.id, label: `${a.candidate.full_name} (${Math.round(a.match_score)})` }))}
                 />
-              ))}
+                {selectedMatch && <MatchSummary result={selectedMatch} />}
+              </>
+            ) : (
+              <GlassEmptyState title="Nothing to break down yet" subtitle="Once someone applies, you can see how their resume compares with this job, skill by skill." />
+            )}
+          </GlassCard>
+        )}
+
+        {tab === 'Shortlisted' && (
+          <div className="stack">
+            <div className="button-row is-end">
+              <GlassButton variant="secondary" onClick={() => downloadJobReport(jobId, job.title)}>Download job report (CSV)</GlassButton>
             </div>
-          )}
-        </GlassCard>
-      )}
+            {shortlisted.length === 0 ? (
+              <GlassEmptyState title="No one shortlisted for this job" subtitle="Choose Shortlist on the Candidates tab to move someone forward." />
+            ) : (
+              <div className="candidate-stack">
+                {shortlisted.map((a) => (
+                  <GlassCandidateCard
+                    key={a.id}
+                    name={a.candidate.full_name}
+                    score={a.match_score}
+                    actions={<GlassButton as={Link} to={`/candidates/${a.candidate.id}`} variant="secondary" size="sm">Profile</GlassButton>}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </>
   )
 }
