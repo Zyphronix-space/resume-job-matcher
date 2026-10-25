@@ -30,13 +30,8 @@ flowchart LR
     class E,M stage
 ```
 
-> **Note on the live demo:** the URL below is still running the project's earlier,
-> single-role version (upload a CV, match it against a pasted job description). The
-> RecruitAI rebuild described in this README — roles, job postings, the candidate
-> pipeline, analytics — hasn't been deployed yet; run it locally (see below) to try it.
->
-> **Previous live demo:** https://salmon-ground-0609b6e00.7.azurestaticapps.net
-> (backend API: https://resume-match-api-stephan.azurewebsites.net)
+**Live demo:** https://resume-match-stephan.vercel.app
+(backend API: https://resume-match-api-stephan.vercel.app/health)
 
 ## What it does
 
