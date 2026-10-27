@@ -1,13 +1,17 @@
-// The mark is two overlapping sheets, a resume and a job description. The
-// overlap is the only filled shape, because the match is where they overlap.
-// One color (currentColor or the accent), no gradient, so it holds up at
-// 16px and in both themes.
+// The mark is two overlapping sheets, a resume and a job description, on a
+// solid accent tile. The overlap is the only filled shape, because the match
+// is where they overlap. The tile keeps it legible at 16px and on any
+// background; accent and accent-contrast swap it for the dark theme.
+// public/favicon.svg is the same drawing with the light-theme colors baked in.
 export default function Logo({ size = 22, className }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden="true" focusable="false">
-      <rect x="2.75" y="2.75" width="12" height="15" rx="1.75" fill="none" stroke="currentColor" strokeWidth="1.5" />
-      <rect x="9.25" y="6.25" width="12" height="15" rx="1.75" fill="none" stroke="currentColor" strokeWidth="1.5" />
-      <rect x="9.25" y="6.25" width="5.5" height="11.5" fill="var(--accent)" />
+      <rect width="24" height="24" rx="5.5" fill="var(--accent)" />
+      <g fill="none" stroke="var(--accent-contrast)" strokeWidth="1.75">
+        <rect x="5" y="4.5" width="9" height="11.5" rx="1.5" />
+        <rect x="10" y="8" width="9" height="11.5" rx="1.5" />
+      </g>
+      <rect x="10" y="8" width="4" height="8" fill="var(--accent-contrast)" />
     </svg>
   )
 }
