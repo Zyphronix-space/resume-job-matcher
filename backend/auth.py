@@ -78,6 +78,18 @@ def get_current_user(
     return user
 
 
+def get_optional_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
+    db: Session = Depends(get_db),
+) -> db_models.User | None:
+    """For routes that are public but can personalise for a signed-in
+    user (the job listings). A bad token is still an error, not silently
+    treated as anonymous."""
+    if credentials is None:
+        return None
+    return get_current_user(credentials, db)
+
+
 def get_current_admin(user: db_models.User = Depends(get_current_user)) -> db_models.User:
     if not user.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")

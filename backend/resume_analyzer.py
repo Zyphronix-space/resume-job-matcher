@@ -96,12 +96,47 @@ def extract_text_from_pdf(file_bytes: bytes) -> str:
         raise HTTPException(status_code=400, detail="Could not read the PDF file") from exc
 
 
+# Skill names that are also everyday English ("go to market", "spring
+# intake", "express interest", "swift delivery"). Each counts only through
+# an unambiguous spelling, or when it appears as an item in a list that
+# also names another skill (e.g. "Skills: Python, Go, SQL").
+_AMBIGUOUS_SKILLS = {
+    "go": re.compile(r"(?<![a-z0-9])golang(?![a-z0-9])|(?<![a-z0-9])go\s*\(\s*(golang|programming)"),
+    "rust": re.compile(r"(?<![a-z0-9])rust(lang|acean)?\s*(\(|programming|language)"),
+    "swift": re.compile(r"(?<![a-z0-9])(swiftui|swift\s*\(\s*ios|swift\s+programming)"),
+    "express": re.compile(r"(?<![a-z0-9])(express\.js|expressjs|express\s+framework)"),
+    "spring": re.compile(r"(?<![a-z0-9])spring\s+(framework|mvc|security|data|cloud)"),
+}
+_LIST_SEPARATORS = ",/|;•·"
+
+
+def _in_skill_list(text_lower: str, skill: str, others: set[str]) -> bool:
+    """True if `skill` occurs as a list item (separator right before or
+    after it) on a line that names at least one other skill."""
+    pattern = re.compile(r"(?<![a-z0-9])" + re.escape(skill) + r"(?![a-z0-9])")
+    for m in pattern.finditer(text_lower):
+        line_start = text_lower.rfind("\n", 0, m.start()) + 1
+        line_end = text_lower.find("\n", m.end())
+        line = text_lower[line_start: len(text_lower) if line_end == -1 else line_end]
+        before = text_lower[line_start:m.start()].rstrip()
+        after = text_lower[m.end():].lstrip()
+        listed = (before[-1:] in _LIST_SEPARATORS or before.endswith(":")) or (after[:1] in _LIST_SEPARATORS)
+        if listed and any(re.search(r"(?<![a-z0-9])" + re.escape(o) + r"(?![a-z0-9])", line) for o in others):
+            return True
+    return False
+
+
 def find_skills(text: str) -> set[str]:
     text_lower = text.lower()
     found = set()
     for skill in SKILLS:
+        if skill in _AMBIGUOUS_SKILLS:
+            continue
         pattern = r"(?<![a-z0-9])" + re.escape(skill) + r"(?![a-z0-9])"
         if re.search(pattern, text_lower):
+            found.add(skill)
+    for skill, unambiguous in _AMBIGUOUS_SKILLS.items():
+        if skill in SKILLS and (unambiguous.search(text_lower) or _in_skill_list(text_lower, skill, found)):
             found.add(skill)
     return found
 

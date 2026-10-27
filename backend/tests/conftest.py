@@ -154,3 +154,38 @@ def applied_application(client, candidate, open_job, uploaded_resume):
     res = client.post(f"/jobs/{open_job['id']}/apply", headers=candidate["headers"], json={})
     assert res.status_code == 200, res.text
     return res.json()
+
+
+def make_posting(external_id, title, **kw):
+    from job_sources import NormalizedPosting, finish
+    return finish(NormalizedPosting(
+        external_id=external_id, title=title, company=kw.pop("company", "Example Labs"),
+        location=kw.pop("location", "Colombo, Sri Lanka"),
+        description=kw.pop("description", "Requirements:\n- Python and SQL\n- Git\n- 2+ years of experience"),
+        apply_url=kw.pop("apply_url", f"https://jobs.lever.co/example/{external_id}"),
+        **kw,
+    ))
+
+
+@pytest.fixture
+def job_index():
+    """A registered source with three real-shaped postings, synced the
+    same way production syncs them (job_ingest.upsert_postings)."""
+    import db_models
+    from database import SessionLocal
+    from job_ingest import upsert_postings
+
+    with SessionLocal() as db:
+        source = db_models.JobSource(kind="lever", board="example", company="Example Labs")
+        db.add(source)
+        db.commit()
+        upsert_postings(db, source, [
+            make_posting("p1", "Software Engineering Intern"),
+            make_posting("p2", "Senior Data Engineer", location="Remote, United States",
+                         description="Requirements:\n- Kubernetes and AWS\n- 7+ years of data engineering experience"),
+            make_posting("p3", "Graduate Frontend Developer", location="Remote - Worldwide",
+                         description="Requirements:\n- React and JavaScript\n- A degree in CS"),
+        ])
+        db.commit()
+        postings = {p.external_id: p.id for p in db.query(db_models.JobPosting).all()}
+        return {"source_id": source.id, "ids": postings}

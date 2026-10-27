@@ -8,6 +8,7 @@ demote any other account via PATCH /admin/users/{id}/role.
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+import account
 import db_models
 from applications_schemas import APPLICATION_STATUSES
 from auth import get_current_admin
@@ -83,16 +84,7 @@ def delete_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Deleted one ORM object at a time (not a bulk .delete() query) so the
-    # relationship cascades on Job/Application/Resume actually fire.
-    for job in db.query(db_models.Job).filter_by(recruiter_id=user_id).all():
-        db.delete(job)
-    for application in db.query(db_models.Application).filter_by(candidate_id=user_id).all():
-        db.delete(application)
-    for resume in db.query(db_models.Resume).filter_by(candidate_id=user_id).all():
-        db.delete(resume)
-    db.query(db_models.PasswordResetToken).filter_by(user_id=user_id).delete()
-    db.delete(user)
+    account.delete_user_data(db, user)
     db.commit()
     return {"removed": True}
 
