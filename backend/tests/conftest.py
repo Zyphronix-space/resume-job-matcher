@@ -1,6 +1,6 @@
 """
-Shared pytest fixtures. Env vars for an isolated test database and resume
-storage dir MUST be set before anything imports database.py/main.py (both
+Shared pytest fixtures. Env vars for an isolated test database (resume
+files live in it too) MUST be set before anything imports database.py/main.py (both
 read them at module-import time), so this happens at the top of this file,
 before any other backend import below.
 """
@@ -10,7 +10,6 @@ import tempfile
 
 _tmp_db_dir = tempfile.mkdtemp(prefix="recruitai-test-db-")
 os.environ["DATABASE_URL"] = f"sqlite:///{_tmp_db_dir.replace(os.sep, '/')}/test.db"
-os.environ["RESUME_STORAGE_DIR"] = tempfile.mkdtemp(prefix="recruitai-test-resumes-")
 os.environ["JWT_SECRET_KEY"] = "test-secret-key-not-for-production"
 os.environ["ALLOWED_ORIGINS"] = ""
 

@@ -5,12 +5,15 @@ import GlassButton from '../../components/glass/GlassButton.jsx'
 import GlassBadge from '../../components/glass/GlassBadge.jsx'
 import GlassEmptyState from '../../components/glass/GlassEmptyState.jsx'
 import { useToast } from '../../components/glass/GlassToast.jsx'
+import PageHeader from '../../components/PageHeader.jsx'
+import LoadingBlock from '../../components/LoadingBlock.jsx'
 import MatchSummary from '../../components/MatchSummary.jsx'
+import { WarningIcon } from '../../components/icons.jsx'
 import { addApplicationNote, changeApplicationStatus } from '../../utils/applications.js'
 import { getCandidateDetail } from '../../utils/candidates.js'
 import { downloadResume, getResumeSections, viewResume } from '../../utils/resumes.js'
 
-const RELEVANT_SECTIONS = ['Work Experience', 'Education', 'Professional Summary', 'Skills']
+const RELEVANT_SECTIONS = ['Professional Summary', 'Work Experience', 'Education', 'Skills']
 
 function ApplicationCard({ app, onReload }) {
   const [noteBody, setNoteBody] = useState('')
@@ -18,9 +21,13 @@ function ApplicationCard({ app, onReload }) {
   const showToast = useToast()
 
   const setStatus = async (status) => {
-    await changeApplicationStatus(app.id, status)
-    showToast(`Status updated to ${status}`, 'success')
-    onReload()
+    try {
+      await changeApplicationStatus(app.id, status)
+      showToast(`Moved to ${status}`, 'success')
+      onReload()
+    } catch (err) {
+      showToast(err.message, 'error')
+    }
   }
 
   const addNote = async (e) => {
@@ -31,50 +38,53 @@ function ApplicationCard({ app, onReload }) {
       await addApplicationNote(app.id, noteBody.trim())
       setNoteBody('')
       onReload()
+    } catch (err) {
+      showToast(err.message, 'error')
     } finally {
       setSaving(false)
     }
   }
 
   return (
-    <GlassCard style={{ marginBottom: '1.2rem' }}>
-      <div className="form-actions" style={{ justifyContent: 'space-between' }}>
-        <div>
-          <h2 className="glass-card-title">
-            <Link to={`/jobs/${app.job.id}`}>{app.job.title}</Link>
-          </h2>
-          <GlassBadge status={app.status} />
-        </div>
+    <GlassCard
+      title={<Link to={`/jobs/${app.job.id}`}>{app.job.title}</Link>}
+      subtitle={<GlassBadge status={app.status} />}
+      actions={(
         <div className="data-table-actions">
-          <GlassButton variant="secondary" size="sm" onClick={() => setStatus('Shortlisted')}>Shortlist</GlassButton>
-          <GlassButton variant="danger" size="sm" onClick={() => setStatus('Rejected')}>Reject</GlassButton>
-          <GlassButton as={Link} to={`/jobs/${app.job.id}?tab=Candidates`} variant="secondary" size="sm">Compare</GlassButton>
+          {app.status !== 'Shortlisted' && <GlassButton variant="secondary" size="sm" onClick={() => setStatus('Shortlisted')}>Shortlist</GlassButton>}
+          {app.status !== 'Rejected' && <GlassButton variant="danger" size="sm" onClick={() => setStatus('Rejected')}>Reject</GlassButton>}
+          <GlassButton as={Link} to={`/jobs/${app.job.id}?tab=Candidates`} variant="ghost" size="sm">Compare with others</GlassButton>
         </div>
-      </div>
-
+      )}
+    >
       <MatchSummary result={app} />
 
-      <h3 className="roadmap-subheading" style={{ marginTop: '1.2rem' }}>Recruiter notes</h3>
-      {app.notes.length > 0 && (
-        <ul className="note-list">
-          {app.notes.map((n) => (
-            <li className="note-item" key={n.id}>
-              <div className="note-item-meta">{n.author_name} · {new Date(n.created_at).toLocaleString()}</div>
-              {n.body}
-            </li>
-          ))}
-        </ul>
-      )}
-      <form onSubmit={addNote} className="form-actions">
-        <input
-          className="glass-field-control"
-          style={{ flex: 1, minWidth: 200 }}
-          value={noteBody}
-          onChange={(e) => setNoteBody(e.target.value)}
-          placeholder="Add a note about this candidate…"
-        />
-        <GlassButton type="submit" variant="primary" disabled={saving}>Add note</GlassButton>
-      </form>
+      <section className="notes" aria-labelledby={`notes-${app.id}`}>
+        <h3 className="subheading" id={`notes-${app.id}`}>Notes</h3>
+        {app.notes.length > 0 ? (
+          <ul className="note-list">
+            {app.notes.map((n) => (
+              <li className="note-item" key={n.id}>
+                <div className="note-item-meta">{n.author_name}, {new Date(n.created_at).toLocaleString()}</div>
+                <p>{n.body}</p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="skill-empty">No notes yet.</p>
+        )}
+        <form onSubmit={addNote} className="note-form">
+          <label className="visually-hidden" htmlFor={`note-${app.id}`}>Add a note</label>
+          <input
+            id={`note-${app.id}`}
+            className="glass-field-control"
+            value={noteBody}
+            onChange={(e) => setNoteBody(e.target.value)}
+            placeholder="Add a note about this application"
+          />
+          <GlassButton type="submit" variant="secondary" disabled={!noteBody.trim()} loading={saving}>Add note</GlassButton>
+        </form>
+      </section>
     </GlassCard>
   )
 }
@@ -94,49 +104,62 @@ export default function CandidateDetailPage() {
 
   useEffect(() => { load() }, [candidateId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (error) return <p className="field-error">{error}</p>
-  if (!detail) return null
+  if (error) return <p className="field-error" role="alert"><WarningIcon size={15} />{error}</p>
+  if (!detail) return <LoadingBlock rows={4} label="Loading candidate" />
 
   const { candidate, resumes, applications } = detail
+  const contact = [candidate.email, candidate.phone, candidate.location].filter(Boolean)
+  const shownSections = sections ? RELEVANT_SECTIONS.filter((s) => sections[s]) : []
 
   return (
     <>
-      <section className="hero" style={{ padding: '1.2rem 0' }}>
-        <h1 className="hero-title" style={{ fontSize: '2rem' }}>{candidate.full_name}</h1>
-        <p className="hero-subtitle">{candidate.email} {candidate.phone && `· ${candidate.phone}`} {candidate.location && `· ${candidate.location}`}</p>
-      </section>
+      <p className="breadcrumb"><Link to="/candidates" className="text-link">Candidates</Link></p>
+      <PageHeader
+        title={candidate.full_name}
+        meta={contact.map((c) => <span key={c} className="cell-wrap">{c}</span>)}
+        description={candidate.headline}
+      />
 
-      <GlassCard title="Resumes" style={{ marginBottom: '1.2rem' }}>
-        <div className="resume-list">
-          {resumes.map((r) => (
-            <div key={r.id} className={`resume-item ${r.is_active ? 'is-active' : ''}`}>
-              <span>{r.filename} {r.is_active && <GlassBadge variant="success">Active</GlassBadge>} (v{r.version})</span>
-              <div className="resume-item-actions">
-                <GlassButton variant="secondary" size="sm" onClick={() => viewResume(r.id)}>View</GlassButton>
-                <GlassButton variant="secondary" size="sm" onClick={() => downloadResume(r.id, r.filename)}>Download</GlassButton>
-              </div>
-            </div>
-          ))}
+      <div className="detail-grid is-wide-left">
+        <div className="stack">
+          <h2 className="section-label">Applications to your jobs</h2>
+          {applications.length === 0 ? (
+            <GlassEmptyState title="No applications to your jobs" />
+          ) : (
+            applications.map((app) => <ApplicationCard key={app.id} app={app} onReload={load} />)
+          )}
         </div>
-      </GlassCard>
 
-      {sections && (
-        <GlassCard title="Resume sections" subtitle="Extracted directly from the active resume's PDF text." style={{ marginBottom: '1.2rem' }}>
-          {RELEVANT_SECTIONS.filter((s) => sections[s]).map((s) => (
-            <div key={s} style={{ marginTop: '0.9rem' }}>
-              <h3 className="roadmap-subheading">{s}</h3>
-              <p style={{ whiteSpace: 'pre-wrap', fontSize: '0.88rem', color: 'var(--text-secondary)' }}>{sections[s]}</p>
-            </div>
-          ))}
-        </GlassCard>
-      )}
+        <div className="stack">
+          <GlassCard title="Resumes">
+            <ul className="row-list">
+              {resumes.map((r) => (
+                <li key={r.id} className="row-list-item is-stacked">
+                  <div className="row-list-main">
+                    <span className="row-list-title" title={r.filename}>{r.filename}</span>
+                    <span className="row-list-meta">Version {r.version}{r.is_active && ', active'}</span>
+                  </div>
+                  <div className="data-table-actions">
+                    <GlassButton variant="secondary" size="sm" onClick={() => viewResume(r.id)}>View</GlassButton>
+                    <GlassButton variant="ghost" size="sm" onClick={() => downloadResume(r.id, r.filename)}>Download</GlassButton>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </GlassCard>
 
-      <h2 className="glass-card-title" style={{ margin: '1.2rem 0 0.8rem' }}>Applications</h2>
-      {applications.length === 0 ? (
-        <GlassEmptyState title="No applications to your jobs" />
-      ) : (
-        applications.map((app) => <ApplicationCard key={app.id} app={app} onReload={load} />)
-      )}
+          {shownSections.length > 0 && (
+            <GlassCard title="From the resume" subtitle="Text extracted from the active resume, as written by the candidate.">
+              {shownSections.map((s) => (
+                <div key={s} className="resume-section">
+                  <h3 className="subheading">{s}</h3>
+                  <p className="resume-section-text">{sections[s]}</p>
+                </div>
+              ))}
+            </GlassCard>
+          )}
+        </div>
+      </div>
     </>
   )
 }

@@ -1,5 +1,9 @@
-import { useRef, useState } from 'react'
-import { DocumentIcon, UploadIcon, WarningIcon, TrashIcon } from './icons.jsx'
+import { useId, useRef, useState } from 'react'
+import { DocumentIcon, UploadIcon, WarningIcon } from './icons.jsx'
+
+// Mirrors backend/resumes_routes.py: PDF only, at most 4 MB, and the PDF
+// needs selectable text (scanned images are rejected server-side).
+export const MAX_RESUME_BYTES = 4 * 1024 * 1024
 
 function formatFileSize(bytes) {
   if (bytes < 1024) return `${bytes} B`
@@ -13,13 +17,18 @@ function isPdf(file) {
 
 export default function UploadPanel({ file, onFileSelect, onFileRemove, disabled }) {
   const inputRef = useRef(null)
+  const hintId = useId()
   const [isDragging, setIsDragging] = useState(false)
   const [validationError, setValidationError] = useState(null)
 
   const acceptFile = (candidate) => {
     if (!candidate) return
     if (!isPdf(candidate)) {
-      setValidationError('Please upload a PDF file.')
+      setValidationError(`“${candidate.name}” isn’t a PDF. Export your resume as a PDF and try again.`)
+      return
+    }
+    if (candidate.size > MAX_RESUME_BYTES) {
+      setValidationError(`This file is ${formatFileSize(candidate.size)}. Resumes can be up to 4 MB.`)
       return
     }
     setValidationError(null)
@@ -33,64 +42,43 @@ export default function UploadPanel({ file, onFileSelect, onFileRemove, disabled
     acceptFile(e.dataTransfer.files?.[0])
   }
 
-  const handleBrowse = () => {
-    if (disabled) return
-    inputRef.current?.click()
-  }
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault()
-      handleBrowse()
-    }
-  }
-
   return (
-    <div className="panel">
-      <h2 className="panel-title">Your resume</h2>
-      <p className="panel-subtitle">Upload your CV as a PDF</p>
-
+    <div className="upload">
       {!file ? (
-        <div
+        <label
           className={`dropzone ${isDragging ? 'is-dragging' : ''} ${disabled ? 'is-disabled' : ''}`}
-          role="button"
-          tabIndex={disabled ? -1 : 0}
-          aria-label="Upload your CV as a PDF"
-          onClick={handleBrowse}
-          onKeyDown={handleKeyDown}
           onDragOver={(e) => { e.preventDefault(); if (!disabled) setIsDragging(true) }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
         >
-          <UploadIcon size={32} className="dropzone-icon" />
-          <p className="dropzone-title">Drop your CV here</p>
-          <p className="dropzone-sub">or click to browse</p>
-          <span className="dropzone-hint">PDF only</span>
+          <UploadIcon size={22} className="dropzone-icon" />
+          <span className="dropzone-title">Drop your resume here, or <span className="dropzone-browse">choose a file</span></span>
+          <span className="dropzone-hint" id={hintId}>PDF with selectable text, up to 4 MB</span>
           <input
             ref={inputRef}
             type="file"
+            className="visually-hidden"
             accept=".pdf,application/pdf"
-            hidden
             disabled={disabled}
-            onChange={(e) => acceptFile(e.target.files?.[0])}
+            aria-describedby={hintId}
+            onChange={(e) => { acceptFile(e.target.files?.[0]); e.target.value = '' }}
           />
-        </div>
+        </label>
       ) : (
         <div className="file-card">
-          <span className="file-card-icon"><DocumentIcon size={26} /></span>
+          <span className="file-card-icon"><DocumentIcon size={20} /></span>
           <div className="file-card-info">
-            <span className="file-card-name">{file.name}</span>
-            <span className="file-card-size">{formatFileSize(file.size)}</span>
+            <span className="file-card-name" title={file.name}>{file.name}</span>
+            <span className="file-card-size">{formatFileSize(file.size)}, ready to upload</span>
           </div>
-          <button type="button" className="file-card-remove" onClick={onFileRemove} disabled={disabled}>
-            <TrashIcon size={15} />
-            Remove
+          <button type="button" className="glass-btn glass-btn-ghost glass-btn-sm" onClick={onFileRemove} disabled={disabled}>
+            Choose another
           </button>
         </div>
       )}
 
       {validationError && (
-        <p className="field-error"><WarningIcon size={15} /> {validationError}</p>
+        <p className="field-error" role="alert"><WarningIcon size={15} />{validationError}</p>
       )}
     </div>
   )

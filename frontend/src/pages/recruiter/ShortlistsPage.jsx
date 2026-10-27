@@ -4,6 +4,9 @@ import GlassCard from '../../components/glass/GlassCard.jsx'
 import GlassButton from '../../components/glass/GlassButton.jsx'
 import GlassCandidateCard from '../../components/glass/GlassCandidateCard.jsx'
 import GlassEmptyState from '../../components/glass/GlassEmptyState.jsx'
+import PageHeader from '../../components/PageHeader.jsx'
+import LoadingBlock from '../../components/LoadingBlock.jsx'
+import { WarningIcon } from '../../components/icons.jsx'
 import { getShortlist } from '../../utils/applications.js'
 import { downloadShortlistReport } from '../../utils/analytics.js'
 import { downloadCandidatesPdf } from '../../utils/pdfReport.js'
@@ -28,27 +31,27 @@ export default function ShortlistsPage() {
 
   return (
     <>
-      <section className="hero" style={{ padding: '1.5rem 0' }}>
-        <h1 className="hero-title" style={{ fontSize: '2rem' }}>Shortlists</h1>
-        <p className="hero-subtitle">Shortlisted candidates across every job, grouped by role.</p>
-      </section>
+      <PageHeader
+        title="Shortlist"
+        description="Shortlisted candidates across every job, grouped by role."
+        actions={shortlist && shortlist.length > 0 && (
+          <>
+            <GlassButton variant="secondary" onClick={downloadShortlistReport}>Download CSV</GlassButton>
+            <GlassButton variant="secondary" onClick={() => downloadCandidatesPdf('Shortlist Report', shortlist)}>Download PDF</GlassButton>
+          </>
+        )}
+      />
 
-      {error && <p className="field-error">{error}</p>}
-
-      {shortlist && shortlist.length > 0 && (
-        <div className="form-actions" style={{ justifyContent: 'flex-end', marginBottom: '1rem' }}>
-          <GlassButton variant="secondary" onClick={downloadShortlistReport}>Download CSV</GlassButton>
-          <GlassButton variant="secondary" onClick={() => downloadCandidatesPdf('Shortlist Report', shortlist)}>Download PDF</GlassButton>
-        </div>
-      )}
+      {error && <p className="field-error" role="alert"><WarningIcon size={15} />{error}</p>}
+      {!shortlist && !error && <LoadingBlock rows={3} label="Loading shortlist" />}
 
       {shortlist && shortlist.length === 0 && (
-        <GlassEmptyState title="No shortlisted candidates yet" subtitle="Shortlist candidates from a job's Candidates tab." />
+        <GlassEmptyState title="No one shortlisted yet" subtitle="Open a job’s Candidates tab and choose Shortlist for the people you want to move forward." />
       )}
 
       {byJob.map(({ job, apps }) => (
-        <GlassCard key={job.id} title={<Link to={`/jobs/${job.id}`}>{job.title}</Link>} style={{ marginBottom: '1.2rem' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
+        <GlassCard key={job.id} title={<Link to={`/jobs/${job.id}`}>{job.title}</Link>} className="stack-item">
+          <div className="candidate-stack">
             {apps.map((a) => (
               <GlassCandidateCard
                 key={a.id}

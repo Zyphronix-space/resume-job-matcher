@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import GlassCard from '../../components/glass/GlassCard.jsx'
 import GlassButton from '../../components/glass/GlassButton.jsx'
 import GlassBadge from '../../components/glass/GlassBadge.jsx'
 import GlassEmptyState from '../../components/glass/GlassEmptyState.jsx'
 import { useToast } from '../../components/glass/GlassToast.jsx'
+import PageHeader from '../../components/PageHeader.jsx'
 import UploadPanel from '../../components/UploadPanel.jsx'
+import LoadingBlock from '../../components/LoadingBlock.jsx'
+import { WarningIcon } from '../../components/icons.jsx'
 import { skillLabel } from '../../utils/skillLabel.js'
 import { deleteResume, downloadResume, listResumes, uploadResume, viewResume } from '../../utils/resumes.js'
 
@@ -13,6 +17,7 @@ export default function ResumesPage() {
   const [file, setFile] = useState(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
   const showToast = useToast()
 
   const load = () => listResumes().then(setResumes).catch((err) => setError(err.message))
@@ -25,7 +30,7 @@ export default function ResumesPage() {
     try {
       await uploadResume(file)
       setFile(null)
-      showToast('Resume uploaded and parsed', 'success')
+      showToast('Resume uploaded. Your matches are updated.', 'success')
       load()
     } catch (err) {
       setError(err.message)
@@ -34,60 +39,80 @@ export default function ResumesPage() {
     }
   }
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this resume?')) return
-    await deleteResume(id)
-    showToast('Resume deleted', 'info')
-    load()
+  const handleDelete = async (resume) => {
+    if (!window.confirm(`Delete “${resume.filename}”? This can’t be undone.`)) return
+    setDeletingId(resume.id)
+    try {
+      await deleteResume(resume.id)
+      showToast('Resume deleted', 'info')
+      load()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   return (
     <>
-      <section className="hero">
-        <h1 className="hero-title">Resumes</h1>
-        <p className="hero-subtitle">Upload a resume to apply to jobs and see your match scores. Your most recent upload becomes the active resume used for new applications.</p>
-      </section>
+      <PageHeader
+        title="Resumes"
+        description="Your newest upload becomes the active resume. It’s the one used for your matches and new applications."
+      />
 
-      <GlassCard style={{ marginBottom: '1.2rem' }}>
-        <UploadPanel file={file} onFileSelect={setFile} onFileRemove={() => setFile(null)} disabled={uploading} />
-        {error && <p className="field-error">{error}</p>}
-        <p className="form-hint">
-          Your resume is stored so recruiters can review it for jobs you apply to. See the{' '}
-          <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a> for details, and delete it here any time.
-        </p>
-        <div className="form-actions">
-          <GlassButton variant="primary" disabled={!file || uploading} onClick={handleUpload}>
-            {uploading ? 'Uploading…' : 'Upload resume'}
-          </GlassButton>
-        </div>
-      </GlassCard>
+      <div className="stack">
+        <GlassCard title="Upload a resume">
+          <UploadPanel file={file} onFileSelect={(f) => { setFile(f); setError(null) }} onFileRemove={() => setFile(null)} disabled={uploading} />
+          {error && <p className="field-error" role="alert" style={{ marginTop: 'var(--space-3)' }}><WarningIcon size={15} />{error}</p>}
+          <div className="upload-footer">
+            <p className="form-hint">
+              Recruiters can see your resume only for jobs you apply to. Read the{' '}
+              <Link to="/privacy" className="text-link">Privacy Policy</Link>, and delete a resume here at any time.
+            </p>
+            <GlassButton variant="primary" disabled={!file} loading={uploading} loadingText="Reading your resume…" onClick={handleUpload}>
+              Upload resume
+            </GlassButton>
+          </div>
+        </GlassCard>
 
-      {resumes && resumes.length === 0 && (
-        <GlassEmptyState title="No resumes yet" subtitle="Upload a PDF resume above to get started." />
-      )}
+        {!resumes && !error && <LoadingBlock rows={2} label="Loading your resumes" />}
 
-      {resumes && resumes.length > 0 && (
-        <div className="resume-list">
-          {resumes.map((r) => (
-            <GlassCard key={r.id} className={r.is_active ? 'is-active' : ''}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
-                <div>
-                  <strong>{r.filename}</strong> {r.is_active && <GlassBadge variant="success">Active</GlassBadge>}
-                  <div className="form-hint">v{r.version} · uploaded {new Date(r.uploaded_at).toLocaleDateString()} · structure score {r.resume_structure_score}/100</div>
-                  <div className="chip-input-row">
-                    {r.cv_skills.slice(0, 8).map((s) => <span key={s} className="skill-pill skill-pill-matched">{skillLabel(s)}</span>)}
+        {resumes && resumes.length === 0 && (
+          <GlassEmptyState title="No resumes yet" subtitle="Your uploaded resumes will be listed here, newest first." />
+        )}
+
+        {resumes && resumes.length > 0 && (
+          <section aria-labelledby="resume-history">
+            <h2 id="resume-history" className="section-label">Uploaded resumes</h2>
+            <ul className="resume-list">
+              {resumes.map((r) => (
+                <li key={r.id} className={`resume-item ${r.is_active ? 'is-active' : ''}`}>
+                  <div className="resume-item-main">
+                    <div className="resume-item-title">
+                      <span className="resume-item-name" title={r.filename}>{r.filename}</span>
+                      {r.is_active && <GlassBadge variant="success">Active</GlassBadge>}
+                    </div>
+                    <p className="resume-item-meta">
+                      Version {r.version}, uploaded {new Date(r.uploaded_at).toLocaleDateString()}. Structure score {r.resume_structure_score}/100.
+                    </p>
+                    {r.cv_skills.length > 0 && (
+                      <ul className="tag-list" aria-label="Detected skills">
+                        {r.cv_skills.slice(0, 10).map((s) => <li key={s} className="tag">{skillLabel(s)}</li>)}
+                        {r.cv_skills.length > 10 && <li className="tag is-more">+{r.cv_skills.length - 10} more</li>}
+                      </ul>
+                    )}
                   </div>
-                </div>
-                <div className="resume-item-actions">
-                  <GlassButton variant="secondary" size="sm" onClick={() => viewResume(r.id)}>View</GlassButton>
-                  <GlassButton variant="secondary" size="sm" onClick={() => downloadResume(r.id, r.filename)}>Download</GlassButton>
-                  <GlassButton variant="danger" size="sm" onClick={() => handleDelete(r.id)}>Delete</GlassButton>
-                </div>
-              </div>
-            </GlassCard>
-          ))}
-        </div>
-      )}
+                  <div className="resume-item-actions">
+                    <GlassButton variant="secondary" size="sm" onClick={() => viewResume(r.id)}>View</GlassButton>
+                    <GlassButton variant="secondary" size="sm" onClick={() => downloadResume(r.id, r.filename)}>Download</GlassButton>
+                    <GlassButton variant="danger" size="sm" loading={deletingId === r.id} onClick={() => handleDelete(r)}>Delete</GlassButton>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </div>
     </>
   )
 }

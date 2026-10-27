@@ -8,6 +8,9 @@ import GlassModal from '../../components/glass/GlassModal.jsx'
 import { useToast } from '../../components/glass/GlassToast.jsx'
 import JobForm from '../../components/JobForm.jsx'
 import { PlusIcon } from '../../components/icons.jsx'
+import PageHeader from '../../components/PageHeader.jsx'
+import LoadingBlock from '../../components/LoadingBlock.jsx'
+import { WarningIcon } from '../../components/icons.jsx'
 import { createJob, deleteJob, listMyJobs } from '../../utils/jobs.js'
 
 export default function JobsListPage() {
@@ -35,14 +38,11 @@ export default function JobsListPage() {
 
   return (
     <>
-      <section className="hero" style={{ padding: '1.5rem 0' }}>
-        <h1 className="hero-title" style={{ fontSize: '2rem' }}>Jobs</h1>
-        <p className="hero-subtitle">Create and manage your job postings.</p>
-      </section>
-
-      <div className="form-actions" style={{ justifyContent: 'flex-end', marginBottom: '1rem' }}>
-        <GlassButton variant="primary" icon={<PlusIcon size={16} />} onClick={() => setShowForm(true)}>Create job</GlassButton>
-      </div>
+      <PageHeader
+        title="Jobs"
+        description="Your job postings. Applicants to open jobs are scored against them automatically."
+        actions={<GlassButton variant="primary" icon={<PlusIcon size={15} />} onClick={() => setShowForm(true)}>New job</GlassButton>}
+      />
 
       {showForm && (
         <GlassModal title="New job" onClose={() => setShowForm(false)} width={720}>
@@ -50,26 +50,31 @@ export default function JobsListPage() {
         </GlassModal>
       )}
 
-      {error && <p className="field-error">{error}</p>}
+      {error && <p className="field-error" role="alert"><WarningIcon size={15} />{error}</p>}
+      {!jobs && !error && <LoadingBlock rows={4} label="Loading jobs" />}
 
       {jobs && jobs.length === 0 && (
-        <GlassEmptyState title="No jobs yet" subtitle="Create your first job to start receiving matched candidates." />
+        <GlassEmptyState
+          title="No jobs yet"
+          subtitle="Create a job with a description and the skills you need. Applicants are ranked against it."
+          action={<GlassButton variant="primary" icon={<PlusIcon size={15} />} onClick={() => setShowForm(true)}>New job</GlassButton>}
+        />
       )}
 
       {jobs && jobs.length > 0 && (
         <GlassTable>
           <thead>
-            <tr><th>Title</th><th>Location</th><th>Type</th><th>Status</th><th>Applicants</th><th>Shortlisted</th><th>Actions</th></tr>
+            <tr><th>Title</th><th>Location</th><th>Type</th><th>Status</th><th>Applicants</th><th>Shortlisted</th><th><span className="visually-hidden">Actions</span></th></tr>
           </thead>
           <tbody>
             {jobs.map((j) => (
               <tr key={j.id}>
                 <td data-label="Title"><Link to={`/jobs/${j.id}`}>{j.title}</Link></td>
-                <td data-label="Location">{j.location || 'N/A'}</td>
+                <td data-label="Location" className="cell-muted">{j.location || 'Not set'}</td>
                 <td data-label="Type">{j.employment_type}</td>
                 <td data-label="Status"><GlassBadge status={j.status} /></td>
-                <td data-label="Applicants">{j.applicants_count}</td>
-                <td data-label="Shortlisted">{j.shortlisted_count}</td>
+                <td data-label="Applicants" className="num">{j.applicants_count}</td>
+                <td data-label="Shortlisted" className="num">{j.shortlisted_count}</td>
                 <td data-label="Actions">
                   <div className="data-table-actions">
                     <GlassButton as={Link} to={`/jobs/${j.id}`} variant="secondary" size="sm">View</GlassButton>

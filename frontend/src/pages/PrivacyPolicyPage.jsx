@@ -1,11 +1,11 @@
 export default function PrivacyPolicyPage() {
   return (
     <section className="legal-page">
-      <h1 className="hero-title legal-title">Privacy Policy</h1>
+      <h1 className="legal-title">Privacy Policy</h1>
       <p className="legal-updated">Last updated: September 2026</p>
 
       <p>
-        RecruitAI is an independent student portfolio project built and operated by Stephan
+        ResumeMatch is an independent student portfolio project built and operated by Stephan
         Wasalathanthrige, not a registered company. It's provided to demonstrate a full-stack
         recruiting workspace. This page explains what personal information the site collects,
         why, and what happens to it.

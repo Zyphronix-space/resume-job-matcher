@@ -1,31 +1,26 @@
-// A custom mark, not a stock icon: a magnifying glass (search / "find") with
-// a checkmark inside the lens (a confirmed match), handle drawn as a single
-// stroke. Reads as "search resulted in a match" — the app's whole premise.
-export default function Logo({ size = 26, className }) {
+// The mark is two overlapping sheets, a resume and a job description, on a
+// solid accent tile. The overlap is the only filled shape, because the match
+// is where they overlap. The tile keeps it legible at 16px and on any
+// background; accent and accent-contrast swap it for the dark theme.
+// public/favicon.svg is the same drawing with the light-theme colors baked in.
+export default function Logo({ size = 22, className }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" className={className} aria-hidden="true">
-      <defs>
-        <linearGradient id="resume-match-logo-grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="var(--accent)" />
-          <stop offset="1" stopColor="var(--accent-strong)" />
-        </linearGradient>
-      </defs>
-      <rect width="32" height="32" rx="9" fill="url(#resume-match-logo-grad)" />
-      <circle cx="13.2" cy="13.2" r="6" fill="none" stroke="var(--accent-contrast)" strokeWidth="2.3" />
-      <path
-        d="M22.4 22.4 17.5 17.5"
-        stroke="var(--accent-contrast)"
-        strokeWidth="2.6"
-        strokeLinecap="round"
-      />
-      <path
-        d="M10.3 13.4 12.4 15.5 16.4 10.9"
-        fill="none"
-        stroke="var(--accent-contrast)"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden="true" focusable="false">
+      <rect width="24" height="24" rx="5.5" fill="var(--accent)" />
+      <g fill="none" stroke="var(--accent-contrast)" strokeWidth="1.75">
+        <rect x="5" y="4.5" width="9" height="11.5" rx="1.5" />
+        <rect x="10" y="8" width="9" height="11.5" rx="1.5" />
+      </g>
+      <rect x="10" y="8" width="4" height="8" fill="var(--accent-contrast)" />
     </svg>
+  )
+}
+
+export function Wordmark({ size = 22, className = '' }) {
+  return (
+    <span className={`wordmark ${className}`}>
+      <Logo size={size} className="wordmark-mark" />
+      <span className="wordmark-text">Resume<span className="wordmark-strong">Match</span></span>
+    </span>
   )
 }

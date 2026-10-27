@@ -10,23 +10,51 @@ run and explain. Uploaded resumes and job description text are still never
 persisted anywhere (see resume_analyzer.py) — only computed results and
 user-entered application data live here.
 
-The path is overridable via the DATABASE_URL env var. This matters on
-platforms like Azure App Service, where the app's own code directory is
-extracted fresh into an ephemeral /tmp location on every restart — a
-relative path there would silently lose all data on restart. Set
-DATABASE_URL to a file under /home (Azure's persistent, network-mounted
-storage) in that environment.
+Local dev and tests use that SQLite file. Production (Vercel) sets
+DATABASE_URL to a TiDB Cloud database instead: serverless functions have
+no persistent disk, so a SQLite file there would vanish between requests.
 """
 
 import os
 from datetime import datetime, timezone
 
-from sqlalchemy import create_engine, inspect, text
+from sqlalchemy import String, create_engine, inspect, text
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./resume_match.db")
+# TiDB Cloud speaks the MySQL protocol; its console hands out mysql:// URLs,
+# but SQLAlchemy needs the driver named explicitly to use PyMySQL.
+if DATABASE_URL.startswith("mysql://"):
+    DATABASE_URL = "mysql+pymysql://" + DATABASE_URL[len("mysql://"):]
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    # TiDB Cloud requires TLS. Serverless instances freeze between requests,
+    # so idle pooled connections may be dead on thaw: pre-ping + recycle,
+    # and keep the pool small since every warm instance holds its own.
+    import certifi
+
+    engine = create_engine(
+        DATABASE_URL,
+        connect_args={"ssl": {"ca": certifi.where()}},
+        pool_pre_ping=True,
+        pool_recycle=240,
+        pool_size=2,
+        max_overflow=3,
+    )
+
+
+@compiles(String, "mysql")
+def _mysql_varchar(type_, compiler, **kw):
+    """MySQL/TiDB VARCHAR requires a length; the models declare bare String
+    columns (fine on SQLite), so give those a default of 255."""
+    if type_.length is None:
+        type_ = String(255, collation=type_.collation)
+    return compiler.visit_VARCHAR(type_, **kw)
+
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -52,7 +80,8 @@ def add_missing_columns() -> None:
                 if column.name in existing_columns:
                     continue
                 col_type = column.type.compile(dialect=engine.dialect)
-                conn.execute(text(f'ALTER TABLE "{table.name}" ADD COLUMN "{column.name}" {col_type}'))
+                quote = engine.dialect.identifier_preparer.quote
+                conn.execute(text(f"ALTER TABLE {quote(table.name)} ADD COLUMN {quote(column.name)} {col_type}"))
 
 
 def get_db():

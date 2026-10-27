@@ -3,6 +3,7 @@ import './App.css'
 
 import PublicLayout from './layouts/PublicLayout.jsx'
 import AppLayout from './layouts/AppLayout.jsx'
+import AuthLayout from './layouts/AuthLayout.jsx'
 import { RedirectIfAuthed, RequireAdmin, RequireAuth, RequireRole } from './routes/Guards.jsx'
 
 import LandingPage from './pages/LandingPage.jsx'
@@ -40,12 +41,15 @@ export default function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/features" element={<FeaturesPage />} />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+      </Route>
+
+      <Route element={<AuthLayout />}>
         <Route path="/login" element={<RedirectIfAuthed><LoginPage /></RedirectIfAuthed>} />
         <Route path="/signup" element={<RedirectIfAuthed><SignupPage /></RedirectIfAuthed>} />
         <Route path="/forgot-password" element={<RedirectIfAuthed><ForgotPasswordPage /></RedirectIfAuthed>} />
         <Route path="/reset-password" element={<RedirectIfAuthed><ResetPasswordPage /></RedirectIfAuthed>} />
-        <Route path="/privacy" element={<PrivacyPolicyPage />} />
-        <Route path="/terms" element={<TermsPage />} />
       </Route>
 
       <Route element={<RequireAuth />}>

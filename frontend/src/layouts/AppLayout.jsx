@@ -3,6 +3,7 @@ import { Link, Outlet } from 'react-router-dom'
 import GlassSidebar from '../components/glass/GlassSidebar.jsx'
 import GlassNavbar from '../components/glass/GlassNavbar.jsx'
 import CommandPalette from '../components/CommandPalette.jsx'
+import { Wordmark } from '../components/Logo.jsx'
 import {
   BriefcaseIcon, ChartIcon, CommandIcon, DocumentIcon, HomeIcon, LogOutIcon, MoonIcon, NoteIcon,
   PeopleIcon, ReportIcon, SearchIcon, SettingsIcon, ShieldIcon, SunIcon, SystemIcon,
@@ -13,7 +14,7 @@ import { useTheme } from '../hooks/useTheme.js'
 import { API_URL } from '../utils/apiUrl.js'
 
 const RECRUITER_LINKS = [
-  { to: '/dashboard', label: 'Dashboard', Icon: HomeIcon },
+  { to: '/dashboard', label: 'Overview', Icon: HomeIcon },
   { to: '/jobs', label: 'Jobs', Icon: BriefcaseIcon },
   { to: '/candidates', label: 'Candidates', Icon: PeopleIcon },
   { to: '/matching', label: 'Matching', Icon: SearchIcon },
@@ -24,14 +25,15 @@ const RECRUITER_LINKS = [
 ]
 
 const CANDIDATE_LINKS = [
-  { to: '/candidate/dashboard', label: 'Dashboard', Icon: HomeIcon },
-  { to: '/profile', label: 'Profile', Icon: UserIcon },
-  { to: '/resumes', label: 'Resumes', Icon: DocumentIcon },
+  { to: '/candidate/dashboard', label: 'Overview', Icon: HomeIcon },
   { to: '/matches', label: 'Matches', Icon: TrackIcon },
+  { to: '/resumes', label: 'Resumes', Icon: DocumentIcon },
+  { to: '/profile', label: 'Profile', Icon: UserIcon },
   { to: '/settings', label: 'Settings', Icon: SettingsIcon },
 ]
 
 const THEME_ICONS = { light: SunIcon, dark: MoonIcon, system: SystemIcon }
+const THEME_LABELS = { light: 'Light', dark: 'Dark', system: 'System' }
 const isMac = typeof navigator !== 'undefined' && /Mac/i.test(navigator.platform)
 
 export default function AppLayout() {
@@ -67,17 +69,28 @@ export default function AppLayout() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
-  const links = user?.role === 'recruiter' ? RECRUITER_LINKS : CANDIDATE_LINKS
+  const isRecruiter = user?.role === 'recruiter'
+  const homeTo = isRecruiter ? '/dashboard' : '/candidate/dashboard'
+  const links = isRecruiter ? RECRUITER_LINKS : CANDIDATE_LINKS
   const allLinks = user?.is_admin ? [...links, { to: '/admin', label: 'Admin', Icon: ShieldIcon }] : links
 
   return (
     <div className="glass-shell">
+      <a href="#main" className="skip-link">Skip to content</a>
+
       <GlassSidebar
         links={allLinks}
+        homeTo={homeTo}
         footer={(
           <>
-            <button type="button" className="glass-sidebar-link" style={{ width: '100%' }} onClick={logout}>
-              <LogOutIcon size={19} />
+            <div className="glass-sidebar-account">
+              <div className="glass-sidebar-account-name">{user?.full_name || user?.email}</div>
+              <div className="glass-sidebar-account-meta">
+                {isRecruiter ? 'Recruiter' : 'Candidate'}{user?.is_admin ? ', admin' : ''}
+              </div>
+            </div>
+            <button type="button" className="glass-sidebar-link" onClick={logout}>
+              <LogOutIcon size={18} />
               <span>Sign out</span>
             </button>
             <nav className="glass-sidebar-legal" aria-label="Legal">
@@ -90,26 +103,37 @@ export default function AppLayout() {
 
       <div className="glass-content">
         <GlassNavbar
-          title={user?.full_name || user?.email}
+          brand={<Link to={homeTo} aria-label="ResumeMatch dashboard"><Wordmark size={20} /></Link>}
+          title={isRecruiter ? 'Recruiter workspace' : 'Candidate workspace'}
           actions={(
             <>
-              <button type="button" className="command-palette-trigger" onClick={() => setPaletteOpen(true)}>
-                <CommandIcon size={15} />
-                Quick actions
+              {apiOnline === false && (
+                <span className="api-status" role="status">
+                  <span className="api-status-dot" aria-hidden="true" />
+                  Can’t reach the server
+                </span>
+              )}
+              <button type="button" className="command-palette-trigger" onClick={() => setPaletteOpen(true)} aria-label="Open quick actions">
+                <CommandIcon size={14} />
+                <span className="command-palette-trigger-label">Quick actions</span>
                 <kbd>{isMac ? '⌘' : 'Ctrl'} K</kbd>
               </button>
-              <span className="api-status" title={apiOnline === null ? 'Checking API status' : apiOnline ? 'API is reachable' : 'API is unreachable'}>
-                <span className={`api-status-dot ${apiOnline === true ? 'is-online' : apiOnline === false ? 'is-offline' : ''}`} />
-                {apiOnline === null ? 'Checking…' : apiOnline ? 'API Online' : 'API Offline'}
-              </span>
-              {user && <span className="role-badge">{user.role}</span>}
-              <button type="button" className="icon-btn" onClick={cycleTheme} aria-label={`Theme: ${themeMode}. Tap to change.`}>
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={cycleTheme}
+                aria-label={`Theme: ${THEME_LABELS[themeMode]}. Switch theme`}
+                title={`Theme: ${THEME_LABELS[themeMode]}`}
+              >
                 <ThemeIcon size={17} />
+              </button>
+              <button type="button" className="icon-btn mobile-only" onClick={logout} aria-label="Sign out" title="Sign out">
+                <LogOutIcon size={17} />
               </button>
             </>
           )}
         />
-        <main className="page glass-page">
+        <main className="glass-page" id="main" tabIndex={-1}>
           <Outlet />
         </main>
       </div>

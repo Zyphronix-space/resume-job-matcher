@@ -1,11 +1,11 @@
 export default function TermsPage() {
   return (
     <section className="legal-page">
-      <h1 className="hero-title legal-title">Terms of Service</h1>
+      <h1 className="legal-title">Terms of Service</h1>
       <p className="legal-updated">Last updated: September 2026</p>
 
       <p>
-        RecruitAI is an independent student portfolio project built by Stephan Wasalathanthrige,
+        ResumeMatch is an independent student portfolio project built by Stephan Wasalathanthrige,
         not a commercial product or a registered business. By creating an account or using the
         site, you agree to the terms below.
       </p>

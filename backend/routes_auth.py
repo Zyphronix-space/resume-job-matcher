@@ -5,6 +5,7 @@ admin to promote one otherwise) — every account after that starts as a
 regular (non-admin) recruiter or candidate, per the role chosen at signup.
 """
 
+import os
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -89,10 +90,22 @@ def change_password(
 
 @router.post("/forgot-password", response_model=ForgotPasswordOut)
 def forgot_password(payload: ForgotPasswordIn, db: Session = Depends(get_db)):
+    # No email service is configured, so a reset token can only reach the
+    # user by being returned in this response. Doing that for any caller
+    # who types an email address would let anyone take over any account,
+    # so it's opt-in for local demos only (PASSWORD_RESET_DEMO_MODE=1) and
+    # must never be enabled on a public deployment. Either way the response
+    # is identical for registered and unknown emails.
+    if os.environ.get("PASSWORD_RESET_DEMO_MODE") != "1":
+        return ForgotPasswordOut(
+            reset_token=None,
+            detail="Self-service password reset isn't available on this deployment. "
+                   "Contact the site owner to recover your account.",
+        )
+
     user = db.query(db_models.User).filter_by(email=payload.email.lower()).first()
     if not user:
-        # Never reveal whether an email is registered.
-        return ForgotPasswordOut(reset_token=None, detail="If that account exists, a reset link was issued.")
+        return ForgotPasswordOut(reset_token=None, detail="Demo mode: if that account exists, its reset link is shown here.")
 
     reset = db_models.PasswordResetToken(
         user_id=user.id, expires_at=datetime.now(timezone.utc) + RESET_TOKEN_LIFETIME,
@@ -100,12 +113,9 @@ def forgot_password(payload: ForgotPasswordIn, db: Session = Depends(get_db)):
     db.add(reset)
     db.commit()
 
-    # No email service is configured for this project — the token is handed
-    # back directly so the flow is fully functional end-to-end. The frontend
-    # labels this clearly as demo mode rather than claiming an email was sent.
     return ForgotPasswordOut(
         reset_token=reset.token,
-        detail="No email service is configured. Use this reset link directly (demo mode).",
+        detail="Demo mode: if that account exists, its reset link is shown here.",
     )
 
 

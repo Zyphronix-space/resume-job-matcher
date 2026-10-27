@@ -57,6 +57,39 @@ describe('LoginPage', () => {
     expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument()
   })
 
+  it('shows field errors instead of submitting when the form is incomplete', async () => {
+    mockLogin.mockClear()
+    renderLoginPage()
+
+    await userEvent.type(screen.getByRole('textbox', { name: 'Email' }), 'not-an-email')
+    await userEvent.click(screen.getByRole('button', { name: 'Sign in' }))
+
+    const email = screen.getByRole('textbox', { name: 'Email' })
+    expect(email).toHaveAttribute('aria-invalid', 'true')
+    expect(email).toHaveAccessibleDescription(/valid email address/i)
+    expect(email).toHaveFocus()
+    expect(screen.getByLabelText('Password')).toHaveAccessibleDescription('Enter your password.')
+    expect(mockLogin).not.toHaveBeenCalled()
+  })
+
+  it('toggles password visibility without submitting the form', async () => {
+    mockLogin.mockClear()
+    renderLoginPage()
+
+    const password = screen.getByLabelText('Password')
+    await userEvent.type(password, 'Secret123')
+    expect(password).toHaveAttribute('type', 'password')
+
+    const toggle = screen.getByRole('button', { name: 'Show password' })
+    await userEvent.click(toggle)
+    expect(password).toHaveAttribute('type', 'text')
+    expect(toggle).toHaveAttribute('aria-pressed', 'true')
+
+    await userEvent.click(toggle)
+    expect(password).toHaveAttribute('type', 'password')
+    expect(mockLogin).not.toHaveBeenCalled()
+  })
+
   it('unchecks remember me and passes that through to login', async () => {
     mockLogin.mockResolvedValue({ role: 'recruiter' })
     renderLoginPage()

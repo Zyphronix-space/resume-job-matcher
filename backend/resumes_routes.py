@@ -1,18 +1,12 @@
 """
 Candidate resume upload/management. Unlike the original /analyze flow,
 resume files are now actually persisted (recruiters need to review them
-later) — but only the parsed, computed profile is stored in the database;
-raw file bytes live on disk under RESUME_STORAGE_DIR, never under a
-statically-served path, and are only ever returned through the
-ownership-checked /resumes/{id}/file route below.
-
-RESUME_STORAGE_DIR is env-overridable for the same reason DATABASE_URL is
-(see database.py): Azure App Service extracts the app fresh into an
-ephemeral location on every restart, so production must point this at
-persistent storage (e.g. a path under /home).
+later). The raw PDF bytes live in the resumes.file_data column (serverless
+hosting has no persistent disk), never under a statically-served path, and
+are only ever returned through the ownership-checked /resumes/{id}/file
+route below. The parsed profile is cached alongside; raw resume text is not.
 """
 
-import os
 import uuid
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
@@ -27,13 +21,15 @@ from resumes_schemas import ResumeOut
 
 router = APIRouter(prefix="/resumes", tags=["resumes"])
 
-RESUME_STORAGE_DIR = os.environ.get("RESUME_STORAGE_DIR", "./resume_storage")
+# Vercel rejects request bodies over 4.5 MB before they reach the app, so
+# cap below that and fail with a readable message instead.
+MAX_RESUME_BYTES = 4 * 1024 * 1024
 
 
-def _storage_path(candidate_id: int, resume_id: str) -> str:
-    directory = os.path.join(RESUME_STORAGE_DIR, str(candidate_id))
-    os.makedirs(directory, exist_ok=True)
-    return os.path.join(directory, f"{resume_id}.pdf")
+def _file_bytes(resume: db_models.Resume) -> bytes:
+    if not resume.file_data:
+        raise HTTPException(status_code=404, detail="Resume file is no longer available")
+    return resume.file_data
 
 
 def load_resume_text_and_profile(resume: db_models.Resume) -> tuple[str, dict]:
@@ -43,10 +39,7 @@ def load_resume_text_and_profile(resume: db_models.Resume) -> tuple[str, dict]:
     persisting raw resume text in the database — used by applications_routes
     at apply-time and whenever an application's evidence needs recomputing.
     """
-    if not os.path.exists(resume.storage_path):
-        raise HTTPException(status_code=404, detail="Resume file is no longer available")
-    with open(resume.storage_path, "rb") as f:
-        cv_text = extract_text_from_pdf(f.read())
+    cv_text = extract_text_from_pdf(_file_bytes(resume))
     return cv_text, extract_resume_profile(cv_text)
 
 
@@ -73,6 +66,8 @@ async def upload_resume(
         raise HTTPException(status_code=400, detail="Resume must be a PDF file")
 
     file_bytes = await file.read()
+    if len(file_bytes) > MAX_RESUME_BYTES:
+        raise HTTPException(status_code=413, detail="Resume must be 4 MB or smaller")
     cv_text = extract_text_from_pdf(file_bytes)
     if not cv_text.strip():
         raise HTTPException(status_code=400, detail="Could not extract text from the PDF")
@@ -85,17 +80,13 @@ async def upload_resume(
         id=str(uuid.uuid4()),
         candidate_id=candidate.id,
         filename=file.filename,
-        storage_path="",
+        file_data=file_bytes,
         version=previous_count + 1,
         is_active=True,
         cv_skills=sorted(profile["cv_skills"]),
         resume_sections=profile["resume_sections"],
         resume_structure_score=profile["resume_structure_score"],
     )
-    resume.storage_path = _storage_path(candidate.id, resume.id)
-    with open(resume.storage_path, "wb") as f:
-        f.write(file_bytes)
-
     db.add(resume)
     db.commit()
     db.refresh(resume)
@@ -170,12 +161,8 @@ def download_resume_file(
     resume = db.query(db_models.Resume).filter_by(id=resume_id).first()
     if not resume or not _can_view_resume(resume, user, db):
         raise HTTPException(status_code=404, detail="Resume not found")
-    if not os.path.exists(resume.storage_path):
-        raise HTTPException(status_code=404, detail="Resume file is no longer available")
-    with open(resume.storage_path, "rb") as f:
-        content = f.read()
     return Response(
-        content=content,
+        content=_file_bytes(resume),
         media_type="application/pdf",
         headers={"Content-Disposition": f'inline; filename="{resume.filename}"'},
     )
@@ -190,8 +177,6 @@ def delete_resume(
     resume = _get_own_resume(resume_id, candidate, db)
     was_active = resume.is_active
 
-    if os.path.exists(resume.storage_path):
-        os.remove(resume.storage_path)
     db.delete(resume)
     db.commit()
 

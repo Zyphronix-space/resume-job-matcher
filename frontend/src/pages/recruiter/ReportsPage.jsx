@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import GlassCard from '../../components/glass/GlassCard.jsx'
 import GlassButton from '../../components/glass/GlassButton.jsx'
 import GlassEmptyState from '../../components/glass/GlassEmptyState.jsx'
+import PageHeader from '../../components/PageHeader.jsx'
+import LoadingBlock from '../../components/LoadingBlock.jsx'
+import { WarningIcon } from '../../components/icons.jsx'
 import { listMyJobs } from '../../utils/jobs.js'
 import { downloadJobReport, downloadShortlistReport } from '../../utils/analytics.js'
 import { rankCandidatesForJob, getShortlist } from '../../utils/applications.js'
@@ -42,43 +45,46 @@ export default function ReportsPage() {
 
   return (
     <>
-      <section className="hero" style={{ padding: '1.5rem 0' }}>
-        <h1 className="hero-title" style={{ fontSize: '2rem' }}>Reports</h1>
-        <p className="hero-subtitle">Export CSV or PDF reports built from real applicant data.</p>
-      </section>
+      <PageHeader title="Reports" description="Download CSV or PDF reports of your applicants and their match results." />
 
-      {error && <p className="field-error">{error}</p>}
+      {error && <p className="field-error" role="alert"><WarningIcon size={15} />{error}</p>}
 
-      <GlassCard title="Shortlist report" subtitle="Every shortlisted candidate across all your jobs." style={{ marginBottom: '1.2rem' }}>
-        <div className="form-actions">
-          <GlassButton variant="primary" onClick={downloadShortlistReport}>Download CSV</GlassButton>
-          <GlassButton variant="secondary" disabled={busyId === 'shortlist'} onClick={handleShortlistPdf}>
-            {busyId === 'shortlist' ? 'Preparing…' : 'Download PDF'}
-          </GlassButton>
-        </div>
-      </GlassCard>
+      <div className="stack">
+        <GlassCard title="Shortlist" subtitle="Every shortlisted candidate across all your jobs.">
+          <div className="button-row">
+            <GlassButton variant="secondary" onClick={downloadShortlistReport}>Download CSV</GlassButton>
+            <GlassButton variant="secondary" loading={busyId === 'shortlist'} loadingText="Preparing PDF…" onClick={handleShortlistPdf}>
+              Download PDF
+            </GlassButton>
+          </div>
+        </GlassCard>
 
-      <GlassCard
-        title="Job matching reports"
-        subtitle="One report per job: every candidate, their match score, and skill breakdown. For a side-by-side candidate comparison export, use the Compare action on a job's Candidates tab."
-      >
-        {jobs && jobs.length === 0 && <GlassEmptyState title="No jobs yet" />}
-        {jobs && jobs.length > 0 && (
-          <ul className="note-list">
-            {jobs.map((j) => (
-              <li className="note-item" key={j.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.8rem', flexWrap: 'wrap' }}>
-                <span>{j.title}: {j.applicants_count} applicant{j.applicants_count === 1 ? '' : 's'}</span>
-                <div className="data-table-actions">
-                  <GlassButton variant="secondary" size="sm" onClick={() => downloadJobReport(j.id, j.title)}>CSV</GlassButton>
-                  <GlassButton variant="secondary" size="sm" disabled={busyId === j.id} onClick={() => handleJobPdf(j)}>
-                    {busyId === j.id ? 'Preparing…' : 'PDF'}
-                  </GlassButton>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </GlassCard>
+        <GlassCard
+          title="By job"
+          subtitle="Every applicant to a job with their score and skills. To compare a few candidates side by side, select them on the job’s Candidates tab."
+        >
+          {!jobs && !error && <LoadingBlock rows={2} label="Loading jobs" />}
+          {jobs && jobs.length === 0 && <GlassEmptyState title="No jobs yet" subtitle="Reports become available once you’ve posted a job." />}
+          {jobs && jobs.length > 0 && (
+            <ul className="row-list">
+              {jobs.map((j) => (
+                <li className="row-list-item" key={j.id}>
+                  <div className="row-list-main">
+                    <span className="row-list-title">{j.title}</span>
+                    <span className="row-list-meta">{j.applicants_count} applicant{j.applicants_count === 1 ? '' : 's'}</span>
+                  </div>
+                  <div className="data-table-actions">
+                    <GlassButton variant="secondary" size="sm" onClick={() => downloadJobReport(j.id, j.title)} aria-label={`Download CSV for ${j.title}`}>CSV</GlassButton>
+                    <GlassButton variant="secondary" size="sm" loading={busyId === j.id} onClick={() => handleJobPdf(j)} aria-label={`Download PDF for ${j.title}`}>
+                      PDF
+                    </GlassButton>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </GlassCard>
+      </div>
     </>
   )
 }
