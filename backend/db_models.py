@@ -14,9 +14,11 @@ import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import (
-    Boolean, Column, DateTime, Float, ForeignKey, Integer, JSON, String, Text, UniqueConstraint,
+    Boolean, Column, DateTime, Float, ForeignKey, Integer, JSON, LargeBinary, String, Text,
+    UniqueConstraint,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.mysql import LONGBLOB
+from sqlalchemy.orm import deferred, relationship
 
 from database import Base
 
@@ -81,7 +83,10 @@ class Resume(Base):
     candidate_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     filename = Column(String, nullable=False)
-    storage_path = Column(String, nullable=False)
+    # The uploaded PDF itself. Stored in the database rather than on disk
+    # because serverless hosting has no persistent filesystem. Deferred so
+    # listing resumes doesn't drag every file's bytes along.
+    file_data = deferred(Column(LargeBinary().with_variant(LONGBLOB(), "mysql"), nullable=True))
     version = Column(Integer, nullable=False, default=1)
     is_active = Column(Boolean, default=True)
 

@@ -1,0 +1,10 @@
+tests/
+.pytest_cache/
+__pycache__/
+*.db
+resume_storage/
+*.log
+.env
+.env.*
+.venv/
+model/
