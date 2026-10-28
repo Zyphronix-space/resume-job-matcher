@@ -44,6 +44,10 @@ class User(Base):
     # regardless of role.
     role = Column(String, nullable=False, default="candidate")
     is_admin = Column(Boolean, default=False)
+    # Bumped when the password changes or is reset; tokens carry the version
+    # they were issued under, so every older session stops working. NULL on
+    # rows created before this column existed, which counts as 0.
+    token_version = Column(Integer, nullable=True, default=0)
 
     full_name = Column(String, default="")
     phone = Column(String, default="")

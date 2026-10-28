@@ -1,11 +1,12 @@
-"""Signup/login validation, roles, first-user-admin, profile, password reset."""
+"""Signup/login validation, roles, profile, password reset."""
 
 from conftest import auth_headers, signup
 
 
-def test_signup_first_user_becomes_admin(client):
+def test_signup_first_user_is_not_admin(client):
+    # Admin is only ever granted by admin_bootstrap.py or an existing admin.
     data = signup(client, "first@example.com", "recruiter")
-    assert data["user"]["is_admin"] is True
+    assert data["user"]["is_admin"] is False
     assert data["user"]["role"] == "recruiter"
 
 

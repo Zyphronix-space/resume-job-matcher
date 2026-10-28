@@ -9,7 +9,16 @@ import os
 import tempfile
 
 _tmp_db_dir = tempfile.mkdtemp(prefix="recruitai-test-db-")
-os.environ["DATABASE_URL"] = f"sqlite:///{_tmp_db_dir.replace(os.sep, '/')}/test.db"
+# TEST_DATABASE_URL runs the suite against a real MySQL/TiDB database. Every
+# test drops and recreates the schema, so only a database whose name ends in
+# "_test" is accepted: the production database can't be targeted by mistake.
+_test_db_url = os.environ.get("TEST_DATABASE_URL", "")
+if _test_db_url:
+    from urllib.parse import urlsplit
+    _db_name = urlsplit(_test_db_url).path.lstrip("/")
+    if not _db_name.endswith("_test"):
+        raise RuntimeError(f"TEST_DATABASE_URL must name a *_test database, not {_db_name!r}")
+os.environ["DATABASE_URL"] = _test_db_url or f"sqlite:///{_tmp_db_dir.replace(os.sep, '/')}/test.db"
 os.environ["JWT_SECRET_KEY"] = "test-secret-key-not-for-production"
 os.environ["ALLOWED_ORIGINS"] = ""
 
@@ -103,21 +112,31 @@ def signup(client, email, role, full_name="Test User", password="Password123"):
     return res.json()
 
 
+def make_admin(user_id: int) -> None:
+    from database import SessionLocal
+    import db_models
+    with SessionLocal() as db:
+        db.query(db_models.User).filter_by(id=user_id).update({"is_admin": True})
+        db.commit()
+
+
 def auth_headers(token: str) -> dict:
     return {"Authorization": f"Bearer {token}"}
 
 
 @pytest.fixture
 def recruiter(client):
-    """A fresh recruiter account (also the first user -> admin) + headers."""
+    """A fresh recruiter account, made admin directly in the test database
+    (signup never grants admin; see admin_bootstrap.py) + headers."""
     data = signup(client, "recruiter@example.com", "recruiter", "Rachel Recruiter")
+    make_admin(data["user"]["id"])
+    data["user"]["is_admin"] = True
     return {"user": data["user"], "headers": auth_headers(data["access_token"])}
 
 
 @pytest.fixture
 def candidate(client, recruiter):
-    """A fresh candidate account, created after the recruiter so it does
-    NOT become the first-user admin."""
+    """A fresh candidate account (not an admin)."""
     data = signup(client, "candidate@example.com", "candidate", "Cara Candidate")
     return {"user": data["user"], "headers": auth_headers(data["access_token"])}
 

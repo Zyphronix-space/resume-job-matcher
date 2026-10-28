@@ -1,9 +1,9 @@
 """
 Sign-up / sign-in / profile / password-reset / account-deletion routes.
-Who becomes the first admin is decided by account.should_bootstrap_admin;
-every other account starts as a regular recruiter or candidate, per the
-role chosen at signup. Sign-up and sign-in are throttled per client IP and
-per email (account.py).
+Signing up never grants admin (see admin_bootstrap.py): every account
+starts as a regular recruiter or candidate, per the role chosen at signup.
+Every route that takes a password or a reset token is throttled (account.py).
+Changing or resetting a password ends every existing session.
 """
 
 import os
@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 import account
 import db_models
-from auth import create_access_token, get_current_user, hash_password, verify_password
+from auth import create_access_token, get_current_user, hash_password, revoke_sessions, verify_password
 from auth_models import (
     ChangePasswordIn, DeleteAccountIn, ForgotPasswordIn, ForgotPasswordOut, LoginIn, ProfileUpdateIn,
     ResetPasswordIn, SignupIn, TokenOut, UserOut,
@@ -43,7 +43,7 @@ def signup(payload: SignupIn, request: Request, db: Session = Depends(get_db)):
         password_hash=password_hash,
         password_salt=salt,
         role=payload.role,
-        is_admin=account.should_bootstrap_admin(db, email),
+        is_admin=False,  # never granted at signup; see admin_bootstrap.py
         full_name=payload.full_name,
     )
     db.add(user)
@@ -51,7 +51,7 @@ def signup(payload: SignupIn, request: Request, db: Session = Depends(get_db)):
     db.refresh(user)
     account.record(db, ip_key)
 
-    return TokenOut(access_token=create_access_token(user.id), user=UserOut.model_validate(user))
+    return TokenOut(access_token=create_access_token(user), user=UserOut.model_validate(user))
 
 
 @router.post("/login", response_model=TokenOut)
@@ -68,7 +68,7 @@ def login(payload: LoginIn, request: Request, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Incorrect email or password")
 
     account.clear(db, email_key)
-    return TokenOut(access_token=create_access_token(user.id), user=UserOut.model_validate(user))
+    return TokenOut(access_token=create_access_token(user), user=UserOut.model_validate(user))
 
 
 @router.post("/delete-account")
@@ -81,8 +81,7 @@ def delete_account(
     stored PDFs), profile, tracker, drafts, applications, and for a
     recruiter their jobs. Requires the current password, so a stolen
     session token alone can't erase an account."""
-    if not verify_password(payload.password, user.password_hash, user.password_salt):
-        raise HTTPException(status_code=400, detail="Password is incorrect")
+    _check_current_password(db, user, payload.password, "Password is incorrect")
     if user.is_admin and db.query(db_models.User).filter_by(is_admin=True).count() == 1 \
             and db.query(db_models.User).count() > 1:
         raise HTTPException(status_code=400, detail="You're the only admin. Make someone else an admin first.")
@@ -109,28 +108,46 @@ def update_profile(
     return user
 
 
+def _check_current_password(db: Session, user: db_models.User, password: str, message: str) -> None:
+    key = f"password-check:{user.id}"
+    account.enforce_limit(db, key, account.PASSWORD_CHECK_WINDOW, account.PASSWORD_CHECK_MAX_PER_USER,
+                          "Too many incorrect passwords. Wait 15 minutes and try again.")
+    if not verify_password(password, user.password_hash, user.password_salt):
+        account.record(db, key)
+        raise HTTPException(status_code=400, detail=message)
+
+
 @router.post("/change-password")
 def change_password(
     payload: ChangePasswordIn,
     user: db_models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    if not verify_password(payload.current_password, user.password_hash, user.password_salt):
-        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    """Ends every other session (a token someone else holds stops working)
+    and returns a fresh token so this browser stays signed in."""
+    _check_current_password(db, user, payload.current_password, "Current password is incorrect")
     password_hash, salt = hash_password(payload.new_password)
     user.password_hash, user.password_salt = password_hash, salt
+    revoke_sessions(user)
     db.commit()
-    return {"updated": True}
+    db.refresh(user)
+    return {"updated": True, "access_token": create_access_token(user)}
 
 
 @router.post("/forgot-password", response_model=ForgotPasswordOut)
-def forgot_password(payload: ForgotPasswordIn, db: Session = Depends(get_db)):
+def forgot_password(payload: ForgotPasswordIn, request: Request, db: Session = Depends(get_db)):
     # No email service is configured, so a reset token can only reach the
     # user by being returned in this response. Doing that for any caller
     # who types an email address would let anyone take over any account,
     # so it's opt-in for local demos only (PASSWORD_RESET_DEMO_MODE=1) and
     # must never be enabled on a public deployment. Either way the response
     # is identical for registered and unknown emails.
+    ip_key, email_key = f"forgot-ip:{account.client_ip(request)}", f"forgot:{payload.email.lower()}"
+    message = "Too many reset requests. Try again later."
+    account.enforce_limit(db, ip_key, account.FORGOT_WINDOW, account.FORGOT_MAX_PER_IP, message)
+    account.enforce_limit(db, email_key, account.FORGOT_WINDOW, account.FORGOT_MAX_PER_EMAIL, message)
+    account.record(db, ip_key, email_key)
+
     if os.environ.get("PASSWORD_RESET_DEMO_MODE") != "1":
         return ForgotPasswordOut(
             reset_token=None,
@@ -155,9 +172,13 @@ def forgot_password(payload: ForgotPasswordIn, db: Session = Depends(get_db)):
 
 
 @router.post("/reset-password")
-def reset_password(payload: ResetPasswordIn, db: Session = Depends(get_db)):
-    reset = db.query(db_models.PasswordResetToken).filter_by(token=payload.token).first()
+def reset_password(payload: ResetPasswordIn, request: Request, db: Session = Depends(get_db)):
+    ip_key = f"reset-ip:{account.client_ip(request)}"
+    account.enforce_limit(db, ip_key, account.RESET_WINDOW, account.RESET_MAX_PER_IP,
+                          "Too many reset attempts. Wait 15 minutes and try again.")
+    reset = db.query(db_models.PasswordResetToken).filter_by(token=payload.token[:64]).first()
     if not reset or reset.used or as_utc(reset.expires_at) < datetime.now(timezone.utc):
+        account.record(db, ip_key)
         raise HTTPException(status_code=400, detail="This reset link is invalid or has expired")
 
     user = db.query(db_models.User).filter_by(id=reset.user_id).first()
@@ -182,5 +203,6 @@ def reset_password(payload: ResetPasswordIn, db: Session = Depends(get_db)):
 
     password_hash, salt = hash_password(payload.new_password)
     user.password_hash, user.password_salt = password_hash, salt
+    revoke_sessions(user)
     db.commit()
     return {"updated": True}

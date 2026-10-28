@@ -16,6 +16,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
+import account
 import db_models
 import drafts
 from assessment import assess
@@ -196,6 +197,10 @@ def track_import(payload: ImportJobIn, candidate=Depends(get_current_candidate),
     """Import one posting from a supported job-board link. The link is
     only parsed (job_sources.parse_posting_url); the data is read from that
     board's public API on a fixed host."""
+    key = f"import:{candidate.id}"
+    account.enforce_limit(db, key, account.IMPORT_WINDOW, account.IMPORT_MAX_PER_USER,
+                          "Too many imports in the last hour. Paste the job details instead, or try later.")
+    account.record(db, key)
     try:
         kind, board, posting_id = parse_posting_url(payload.url)
         item = fetch_single_posting(kind, board, posting_id)

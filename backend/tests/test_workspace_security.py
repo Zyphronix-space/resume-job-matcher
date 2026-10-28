@@ -156,27 +156,6 @@ def test_signup_is_throttled_per_ip(client, monkeypatch):
     assert res.status_code == 429
 
 
-def test_admin_bootstrap_on_vercel_needs_the_configured_email(client, monkeypatch):
-    monkeypatch.setenv("VERCEL", "1")
-    monkeypatch.delenv("ADMIN_BOOTSTRAP_EMAIL", raising=False)
-    first = signup(client, "stranger@example.com", "candidate")
-    assert first["user"]["is_admin"] is False
-
-    monkeypatch.setenv("ADMIN_BOOTSTRAP_EMAIL", "Owner@Example.com")
-    assert signup(client, "someone@example.com", "candidate")["user"]["is_admin"] is False
-    assert signup(client, "owner@example.com", "recruiter")["user"]["is_admin"] is True
-
-
-def test_admin_bootstrap_happens_once(client, monkeypatch):
-    monkeypatch.setenv("ADMIN_BOOTSTRAP_EMAIL", "owner@example.com")
-    assert signup(client, "owner@example.com", "recruiter")["user"]["is_admin"] is True
-    with SessionLocal() as db:
-        db.query(db_models.User).filter_by(email="owner@example.com").update({"email": "renamed@example.com"})
-        db.commit()
-    # Even the bootstrap address can't mint a second admin once one exists
-    assert signup(client, "owner@example.com", "recruiter")["user"]["is_admin"] is False
-
-
 def test_signup_cannot_request_admin(client, recruiter):
     res = client.post("/auth/signup", json={
         "full_name": "Eve", "email": "eve@example.com", "password": "Password123", "role": "candidate", "is_admin": True,

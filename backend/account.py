@@ -1,37 +1,15 @@
 """
-Account-level rules shared by several routers: who becomes the first
-admin, sign-in throttling, and deleting everything an account owns.
+Account-level rules shared by several routers: throttling of the auth
+routes, and deleting everything an account owns. (Who becomes the first
+admin is admin_bootstrap.py; signing up never grants it.)
 """
 
-import os
 from datetime import datetime, timedelta, timezone
 
 from fastapi import HTTPException, Request
 from sqlalchemy.orm import Session
 
 import db_models
-
-# --- First admin -------------------------------------------------------------
-#
-# Historically the first account ever created became admin. On a public
-# deployment that means whoever signs up first, a stranger included, owns
-# the admin panel; two simultaneous first signups could also both pass the
-# "no users yet" check. On Vercel the bootstrap is therefore tied to one
-# address: only ADMIN_BOOTSTRAP_EMAIL becomes admin automatically (the
-# unique email column makes that race-free), and with it unset nobody does.
-# Local development keeps the old first-user behaviour.
-
-
-def should_bootstrap_admin(db: Session, email: str) -> bool:
-    bootstrap_email = os.environ.get("ADMIN_BOOTSTRAP_EMAIL", "").strip().lower()
-    if bootstrap_email:
-        if email.lower() != bootstrap_email:
-            return False
-        return db.query(db_models.User).filter_by(is_admin=True).count() == 0
-    if os.environ.get("VERCEL"):
-        return False
-    return db.query(db_models.User).count() == 0
-
 
 # --- Throttling ----------------------------------------------------------------
 
@@ -40,6 +18,23 @@ LOGIN_MAX_PER_EMAIL = 8
 LOGIN_MAX_PER_IP = 30
 SIGNUP_WINDOW = timedelta(hours=1)
 SIGNUP_MAX_PER_IP = 10
+# Wrong current password on change-password / delete-account, per account:
+# a stolen session token shouldn't be a password-guessing oracle.
+PASSWORD_CHECK_WINDOW = timedelta(minutes=15)
+PASSWORD_CHECK_MAX_PER_USER = 5
+RESET_WINDOW = timedelta(minutes=15)
+RESET_MAX_PER_IP = 10
+FORGOT_WINDOW = timedelta(hours=1)
+FORGOT_MAX_PER_IP = 10
+FORGOT_MAX_PER_EMAIL = 3
+# Imports read an external job board on the server's behalf.
+IMPORT_WINDOW = timedelta(hours=1)
+IMPORT_MAX_PER_USER = 30
+
+# These limits count rows in auth_attempts, then add one: two requests in
+# the same instant can both pass the check, so a burst can exceed a limit
+# by the number of concurrent requests. They bound sustained guessing, not
+# single bursts; Vercel's own DDoS protection covers floods.
 
 
 def client_ip(request: Request) -> str:
@@ -99,7 +94,7 @@ def delete_user_data(db: Session, user: db_models.User) -> None:
         db.delete(resume)
     db.query(db_models.PasswordResetToken).filter_by(user_id=user.id).delete(synchronize_session=False)
     db.query(db_models.AuthAttempt).filter(
-        db_models.AuthAttempt.key.in_([f"login:{user.email}", f"email:{user.email}"])
+        db_models.AuthAttempt.key.in_([f"login:{user.email}", f"forgot:{user.email}", f"password-check:{user.id}", f"import:{user.id}"])
     ).delete(synchronize_session=False)
     db.flush()
     db.delete(user)
