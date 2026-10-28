@@ -164,8 +164,23 @@ def reset_password(payload: ResetPasswordIn, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=400, detail="This reset link is invalid or has expired")
 
+    # Claim the token with a conditional UPDATE rather than trusting the read
+    # above: two concurrent requests can both see used=False, but only one
+    # of them can flip it, so a token resets the password at most once.
+    # Claiming every unused token for this user also retires older links.
+    claimed = (
+        db.query(db_models.PasswordResetToken)
+        .filter_by(token=reset.token, used=False)
+        .update({"used": True}, synchronize_session=False)
+    )
+    if claimed != 1:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="This reset link is invalid or has expired")
+    db.query(db_models.PasswordResetToken).filter_by(user_id=user.id, used=False).update(
+        {"used": True}, synchronize_session=False,
+    )
+
     password_hash, salt = hash_password(payload.new_password)
     user.password_hash, user.password_salt = password_hash, salt
-    reset.used = True
     db.commit()
     return {"updated": True}
