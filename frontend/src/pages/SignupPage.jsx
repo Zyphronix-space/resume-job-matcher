@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { MIN_PASSWORD_LENGTH, validateEmail, validateNewPassword, validatePasswordConfirmation } from '../utils/validation.js'
 
 const ROLES = [
-  { value: 'candidate', label: 'Candidate', hint: 'Upload a resume and see how you match open roles.' },
+  { value: 'candidate', label: 'Candidate', hint: 'Find jobs, check your fit, prepare applications and track them.' },
   { value: 'recruiter', label: 'Recruiter', hint: 'Post jobs and review ranked applicants.' },
 ]
 

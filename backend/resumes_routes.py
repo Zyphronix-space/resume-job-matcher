@@ -7,6 +7,7 @@ are only ever returned through the ownership-checked /resumes/{id}/file
 route below. The parsed profile is cached alongside; raw resume text is not.
 """
 
+import re
 import uuid
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
@@ -24,6 +25,17 @@ router = APIRouter(prefix="/resumes", tags=["resumes"])
 # Vercel rejects request bodies over 4.5 MB before they reach the app, so
 # cap below that and fail with a readable message instead.
 MAX_RESUME_BYTES = 4 * 1024 * 1024
+
+
+def safe_filename(name: str) -> str:
+    """The uploaded name is echoed back in a Content-Disposition header, so
+    keep it to a plain, printable name: no quotes, slashes or control
+    characters that could break out of the header value."""
+    base = (name or "resume.pdf").replace("\\", "/").rsplit("/", 1)[-1]
+    cleaned = re.sub(r"[^A-Za-z0-9 ._()-]", "_", base).strip(" .") or "resume"
+    if not cleaned.lower().endswith(".pdf"):
+        cleaned += ".pdf"
+    return cleaned[-120:]
 
 
 def _file_bytes(resume: db_models.Resume) -> bytes:
@@ -62,12 +74,16 @@ async def upload_resume(
     candidate: db_models.User = Depends(get_current_candidate),
     db: Session = Depends(get_db),
 ):
-    if not file.filename.lower().endswith(".pdf"):
+    if not (file.filename or "").lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Resume must be a PDF file")
 
-    file_bytes = await file.read()
+    file_bytes = await file.read(MAX_RESUME_BYTES + 1)
     if len(file_bytes) > MAX_RESUME_BYTES:
         raise HTTPException(status_code=413, detail="Resume must be 4 MB or smaller")
+    # The extension is only a claim; a real PDF starts with this signature
+    # (allowed a little leading junk, as PDF readers do).
+    if b"%PDF-" not in file_bytes[:1024]:
+        raise HTTPException(status_code=400, detail="That file isn't a valid PDF")
     cv_text = extract_text_from_pdf(file_bytes)
     if not cv_text.strip():
         raise HTTPException(status_code=400, detail="Could not extract text from the PDF")
@@ -79,7 +95,7 @@ async def upload_resume(
     resume = db_models.Resume(
         id=str(uuid.uuid4()),
         candidate_id=candidate.id,
-        filename=file.filename,
+        filename=safe_filename(file.filename),
         file_data=file_bytes,
         version=previous_count + 1,
         is_active=True,
@@ -177,6 +193,18 @@ def delete_resume(
     resume = _get_own_resume(resume_id, candidate, db)
     was_active = resume.is_active
 
+    # An application to a recruiter's job keeps a reference to the exact
+    # resume that was sent; deleting it would break that record (and the
+    # foreign key on TiDB). The candidate can withdraw by deleting their
+    # account, which removes both.
+    in_use = db.query(db_models.Application).filter_by(resume_id=resume.id).count()
+    if in_use:
+        raise HTTPException(
+            status_code=409,
+            detail=f"This resume was sent with {in_use} application{'s' if in_use != 1 else ''} "
+                   "on ResumeMatch, so it can't be deleted on its own.",
+        )
+    db.query(db_models.TrackedJob).filter_by(resume_id=resume.id).update({"resume_id": None})
     db.delete(resume)
     db.commit()
 

@@ -149,6 +149,7 @@ textarea.glass-field-control { resize: vertical; min-height: 140px; line-height:
 .form-alert svg { flex-shrink: 0; margin-top: 2px; }
 .form-alert.is-error { background: var(--danger-soft); border-color: color-mix(in srgb, var(--danger) 35%, transparent); color: var(--danger); }
 .form-alert.is-success { background: var(--success-soft); border-color: color-mix(in srgb, var(--success) 35%, transparent); color: var(--success); }
+.form-alert.is-warning { background: var(--warning-soft); border-color: color-mix(in srgb, var(--warning) 35%, transparent); color: var(--warning); }
 .form-alert.is-info { background: var(--surface-sunken); border-color: var(--border); color: var(--text-secondary); }
 
 /* ---------- Segmented control (radio group) ---------- */
@@ -625,7 +626,7 @@ textarea.glass-field-control { resize: vertical; min-height: 140px; line-height:
 
 .glass-page {
   width: 100%;
-  max-width: var(--content-max);
+  max-width: var(--app-content-max);
   padding: var(--space-6) var(--space-6) var(--space-8);
 }
 

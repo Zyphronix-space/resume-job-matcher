@@ -1,11 +1,12 @@
-"""Signup/login validation, roles, first-user-admin, profile, password reset."""
+"""Signup/login validation, roles, profile, password reset."""
 
 from conftest import auth_headers, signup
 
 
-def test_signup_first_user_becomes_admin(client):
+def test_signup_first_user_is_not_admin(client):
+    # Admin is only ever granted by admin_bootstrap.py or an existing admin.
     data = signup(client, "first@example.com", "recruiter")
-    assert data["user"]["is_admin"] is True
+    assert data["user"]["is_admin"] is False
     assert data["user"]["role"] == "recruiter"
 
 
@@ -107,6 +108,47 @@ def test_forgot_and_reset_password(client, candidate, monkeypatch):
 
     reuse = client.post("/auth/reset-password", json={"token": token, "new_password": "AnotherOne123"})
     assert reuse.status_code == 400
+
+
+def test_reset_retires_other_outstanding_tokens(client, candidate, monkeypatch):
+    monkeypatch.setenv("PASSWORD_RESET_DEMO_MODE", "1")
+    first = client.post("/auth/forgot-password", json={"email": "candidate@example.com"}).json()["reset_token"]
+    second = client.post("/auth/forgot-password", json={"email": "candidate@example.com"}).json()["reset_token"]
+
+    assert client.post("/auth/reset-password", json={"token": second, "new_password": "BrandNew123"}).status_code == 200
+    stale = client.post("/auth/reset-password", json={"token": first, "new_password": "Sneaky12345"})
+    assert stale.status_code == 400
+
+    login = client.post("/auth/login", json={"email": "candidate@example.com", "password": "BrandNew123"})
+    assert login.status_code == 200
+
+
+def test_reset_token_claim_is_conditional(client, candidate, monkeypatch):
+    """A request that read the token as unused but lost the race to claim it
+    must be rejected, not reset the password a second time."""
+    import db_models
+    import routes_auth
+    from database import SessionLocal
+
+    monkeypatch.setenv("PASSWORD_RESET_DEMO_MODE", "1")
+    token = client.post("/auth/forgot-password", json={"email": "candidate@example.com"}).json()["reset_token"]
+
+    # as_utc runs right after the token is read as unused and before it is
+    # claimed: use it to let a concurrent request win in between.
+    real_as_utc = routes_auth.as_utc
+
+    def concurrent_request_wins(value):
+        with SessionLocal() as other:
+            other.query(db_models.PasswordResetToken).filter_by(token=token).update({"used": True})
+            other.commit()
+        return real_as_utc(value)
+
+    monkeypatch.setattr(routes_auth, "as_utc", concurrent_request_wins)
+    res = client.post("/auth/reset-password", json={"token": token, "new_password": "BrandNew123"})
+    assert res.status_code == 400
+
+    login = client.post("/auth/login", json={"email": "candidate@example.com", "password": "Password123"})
+    assert login.status_code == 200
 
 
 def test_forgot_password_unknown_email_does_not_leak(client, monkeypatch):

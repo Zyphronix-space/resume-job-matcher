@@ -15,9 +15,11 @@ const RECRUITER_COMMANDS = [
 ]
 
 const CANDIDATE_COMMANDS = [
+  { id: 'search-job', label: 'Find jobs', hint: 'Real openings from employer job boards', Icon: SearchIcon, to: '/openings' },
+  { id: 'tracker', label: 'Tracker', hint: 'Saved jobs, applications and follow-ups', Icon: TrackIcon, to: '/tracker' },
   { id: 'upload-resume', label: 'Upload a resume', hint: 'Manage your resumes', Icon: DocumentIcon, to: '/resumes' },
-  { id: 'search-job', label: 'Matches', hint: 'Open roles ranked against your resume', Icon: SearchIcon, to: '/matches' },
-  { id: 'applications', label: 'Applications', hint: 'Your applications and their status', Icon: TrackIcon, to: '/candidate/dashboard' },
+  { id: 'profile', label: 'Profile', hint: 'Review your background and contact details', Icon: NoteIcon, to: '/profile' },
+  { id: 'posted-here', label: 'Roles posted here', hint: 'Jobs recruiters posted on ResumeMatch', Icon: BriefcaseIcon, to: '/matches' },
   { id: 'settings', label: 'Settings', hint: 'Profile and account security', Icon: SettingsIcon, to: '/settings' },
 ]
 

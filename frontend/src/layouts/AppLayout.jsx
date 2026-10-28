@@ -26,9 +26,11 @@ const RECRUITER_LINKS = [
 
 const CANDIDATE_LINKS = [
   { to: '/candidate/dashboard', label: 'Overview', Icon: HomeIcon },
-  { to: '/matches', label: 'Matches', Icon: TrackIcon },
+  { to: '/openings', label: 'Jobs', Icon: SearchIcon },
+  { to: '/tracker', label: 'Tracker', Icon: TrackIcon },
   { to: '/resumes', label: 'Resumes', Icon: DocumentIcon },
   { to: '/profile', label: 'Profile', Icon: UserIcon },
+  { to: '/matches', label: 'Roles posted here', Icon: BriefcaseIcon },
   { to: '/settings', label: 'Settings', Icon: SettingsIcon },
 ]
 
@@ -72,7 +74,9 @@ export default function AppLayout() {
   const isRecruiter = user?.role === 'recruiter'
   const homeTo = isRecruiter ? '/dashboard' : '/candidate/dashboard'
   const links = isRecruiter ? RECRUITER_LINKS : CANDIDATE_LINKS
-  const allLinks = user?.is_admin ? [...links, { to: '/admin', label: 'Admin', Icon: ShieldIcon }] : links
+  const allLinks = user?.is_admin
+    ? [...links, { to: '/admin', label: 'Admin', Icon: ShieldIcon, end: true }, { to: '/admin/sources', label: 'Job sources', Icon: NoteIcon }]
+    : links
 
   return (
     <div className="glass-shell">

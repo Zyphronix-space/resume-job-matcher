@@ -19,6 +19,18 @@ const SECTIONS = [
     body: 'Missing skills are listed by importance, and skills with a known prerequisite are placed after it. This is a simple rule-based ordering, not personalized career advice.',
   },
   {
+    title: 'Requirement check',
+    body: 'For a saved or browsed job, each requirement line in the posting is checked against your resume: shown, partly shown, or not found. Lines about years of experience, degrees or languages can’t be verified from text, so they’re shown for you to judge and never scored.',
+  },
+  {
+    title: 'Job sources',
+    body: 'Openings are read from employers’ own public job-board APIs (Greenhouse, Lever, Ashby, SmartRecruiters, Workable) or added by hand from an employer’s published advert. Each one shows its source and when it was last checked, and a role the employer stops listing is marked as no longer listed.',
+  },
+  {
+    title: 'Drafts',
+    body: 'Tailored resume, cover letter and outreach drafts are filled in by a fixed template using only your own resume and reviewed profile. They aren’t written by AI. Anything the template can’t fill truthfully is left as an [ADD: …] gap for you.',
+  },
+  {
     title: 'Recruiter pipeline',
     body: 'Applications move through Applied, Screening, Interview, and Offer, or are shortlisted or rejected. Recruiters can add notes, compare candidates, and export CSV or PDF reports built from the same data.',
   },
@@ -34,7 +46,7 @@ export default function FeaturesPage() {
       <header className="prose-header">
         <h1 className="display-title is-small">How matching works</h1>
         <p className="lede">
-          Everything in ResumeMatch, from a candidate’s match list to a recruiter’s ranking, comes from one
+          Everything in ResumeMatch, from a job seeker’s fit check to a recruiter’s ranking, comes from one
           matching pipeline. Here is what each number means.
         </p>
       </header>

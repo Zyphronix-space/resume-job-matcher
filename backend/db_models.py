@@ -44,6 +44,10 @@ class User(Base):
     # regardless of role.
     role = Column(String, nullable=False, default="candidate")
     is_admin = Column(Boolean, default=False)
+    # Bumped when the password changes or is reset; tokens carry the version
+    # they were issued under, so every older session stops working. NULL on
+    # rows created before this column existed, which counts as 0.
+    token_version = Column(Integer, nullable=True, default=0)
 
     full_name = Column(String, default="")
     phone = Column(String, default="")
@@ -171,3 +175,185 @@ class PasswordResetToken(Base):
     expires_at = Column(DateTime, nullable=False)
     used = Column(Boolean, default=False)
     created_at = Column(DateTime, default=_now)
+
+
+# --- Job-seeker workspace -------------------------------------------------
+#
+# Everything below works without any recruiter on the platform: real
+# vacancies imported from public employer job boards (or curated by an
+# admin), a candidate's own reviewed profile, and a private tracker with
+# per-job drafts. None of it is visible to any other account.
+
+
+class JobSource(Base):
+    """One employer job board the platform is allowed to read, e.g. a
+    company's public Greenhouse board. A per-company board is exactly that:
+    one company's openings, not a search index of the job market."""
+
+    __tablename__ = "job_sources"
+    __table_args__ = (UniqueConstraint("kind", "board", name="uq_job_source_kind_board"),)
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    # greenhouse | lever | ashby | smartrecruiters | workable | manual
+    kind = Column(String(32), nullable=False)
+    board = Column(String(120), nullable=False, default="")  # board token / company slug; "" for manual
+    company = Column(String(200), nullable=False)
+    website = Column(String(500), default="")
+    enabled = Column(Boolean, default=True)
+    notes = Column(Text, default="")  # terms, coverage limits, who verified it
+
+    last_synced_at = Column(DateTime, nullable=True)
+    last_status = Column(String(32), default="never")  # never | ok | error
+    last_error = Column(Text, default="")
+    last_count = Column(Integer, default=0)
+    created_at = Column(DateTime, default=_now)
+
+
+class JobPosting(Base):
+    """A real vacancy as published by its source. Never edited to look
+    better than the original: the description is the source's own text
+    (HTML stripped), and apply_url always points back to the employer."""
+
+    __tablename__ = "job_postings"
+    __table_args__ = (UniqueConstraint("source_id", "external_id", name="uq_posting_source_external"),)
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+    source_id = Column(Integer, ForeignKey("job_sources.id"), nullable=False, index=True)
+    external_id = Column(String(191), nullable=False)
+    # sha256 of normalized company|title|location, shared by the same
+    # vacancy published through two sources; see job_ingest.dedupe_key.
+    dedupe_key = Column(String(64), nullable=False, index=True)
+    duplicate_of = Column(String(36), nullable=True)
+
+    title = Column(String(300), nullable=False)
+    company = Column(String(200), nullable=False)
+    location = Column(String(500), default="")
+    country = Column(String(80), default="")
+    work_mode = Column(String(20), default="Unspecified")  # Remote | Hybrid | On-site | Unspecified
+    employment_type = Column(String(40), default="Unspecified")
+    experience_level = Column(String(40), default="Unspecified")  # Internship | Graduate | Junior | Mid | Senior | Unspecified
+    # Located in Sri Lanka, or remote with no stated country restriction.
+    open_to_sri_lanka = Column(Boolean, default=False)
+    description = Column(Text, default="")
+    skills = Column(JSON, default=list)
+
+    posted_at = Column(DateTime, nullable=True)  # as stated by the source; None when it doesn't say
+    apply_url = Column(String(1000), default="")
+    source_url = Column(String(1000), default="")
+
+    status = Column(String(20), default="active")  # active | expired
+    first_seen_at = Column(DateTime, default=_now)
+    last_verified_at = Column(DateTime, default=_now)  # last time the source still listed it
+    closed_at = Column(DateTime, nullable=True)
+    expires_at = Column(DateTime, nullable=True)  # stated closing date (manual postings, mostly)
+
+    source = relationship("JobSource")
+
+
+class CandidateProfile(Base):
+    """Details the candidate reviewed and confirmed. Extraction from the
+    resume only ever produces suggestions; nothing lands here until the
+    candidate saves it, and drafts are built from this plus the resume."""
+
+    __tablename__ = "candidate_profiles"
+
+    user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
+    summary = Column(Text, default="")
+    skills = Column(JSON, default=list)
+    education = Column(JSON, default=list)
+    experience = Column(JSON, default=list)
+    projects = Column(JSON, default=list)
+    certifications = Column(JSON, default=list)
+    target_roles = Column(JSON, default=list)
+    preferred_locations = Column(JSON, default=list)
+    work_modes = Column(JSON, default=list)
+    # Off by default. No recruiter search reads it yet; it exists so the
+    # choice is the candidate's before any discovery feature ships.
+    discoverable = Column(Boolean, default=False)
+    confirmed_at = Column(DateTime, nullable=True)
+    updated_at = Column(DateTime, default=_now, onupdate=_now)
+
+
+TRACKER_STAGES = ["Saved", "Preparing", "Applied", "Assessment", "Interview", "Offer", "Rejected", "Withdrawn"]
+
+
+class TrackedJob(Base):
+    """A job in the candidate's private tracker: either a real posting
+    from the job index or one the candidate pasted in themselves."""
+
+    __tablename__ = "tracked_jobs"
+    __table_args__ = (UniqueConstraint("user_id", "posting_id", name="uq_tracked_user_posting"),)
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    posting_id = Column(String(36), ForeignKey("job_postings.id"), nullable=True)
+    origin = Column(String(20), default="posting")  # posting | pasted
+
+    # Copied from the posting when tracked (so the record survives the
+    # posting expiring), or typed/pasted by the candidate.
+    title = Column(String(300), nullable=False)
+    company = Column(String(200), default="")
+    location = Column(String(500), default="")
+    apply_url = Column(String(1000), default="")
+    description = Column(Text, default="")
+
+    stage = Column(String(20), default="Saved")
+    resume_id = Column(String(36), ForeignKey("resumes.id"), nullable=True)
+    applied_on = Column(DateTime, nullable=True)
+    next_follow_up = Column(DateTime, nullable=True)
+    notes = Column(Text, default="")
+    prep_notes = Column(Text, default="")
+
+    created_at = Column(DateTime, default=_now)
+    updated_at = Column(DateTime, default=_now, onupdate=_now)
+
+    events = relationship(
+        "TrackedJobEvent", back_populates="tracked_job", cascade="all, delete-orphan",
+        order_by="TrackedJobEvent.at",
+    )
+    documents = relationship("ApplicationDocument", back_populates="tracked_job", cascade="all, delete-orphan")
+    posting = relationship("JobPosting")
+
+
+class TrackedJobEvent(Base):
+    __tablename__ = "tracked_job_events"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    tracked_job_id = Column(String(36), ForeignKey("tracked_jobs.id"), nullable=False, index=True)
+    from_stage = Column(String(20), default="")
+    to_stage = Column(String(20), nullable=False)
+    at = Column(DateTime, default=_now)
+
+    tracked_job = relationship("TrackedJob", back_populates="events")
+
+
+class ApplicationDocument(Base):
+    """A job-specific draft: tailored resume, cover letter or outreach
+    message. Generated from the candidate's own data by a template (see
+    drafts.py), then edited freely by the candidate."""
+
+    __tablename__ = "application_documents"
+    __table_args__ = (UniqueConstraint("tracked_job_id", "kind", name="uq_document_per_kind"),)
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+    tracked_job_id = Column(String(36), ForeignKey("tracked_jobs.id"), nullable=False)
+    kind = Column(String(20), nullable=False)  # resume | cover_letter | outreach
+    content = Column(Text, default="")
+    generator = Column(String(40), default="")  # e.g. "template-v1"
+    edited = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=_now)
+    updated_at = Column(DateTime, default=_now, onupdate=_now)
+
+    tracked_job = relationship("TrackedJob", back_populates="documents")
+
+
+class AuthAttempt(Base):
+    """A failed sign-in, keyed by email and by client IP. Stored in the
+    database rather than memory because serverless instances don't share
+    memory, so an in-process counter would reset on every new instance."""
+
+    __tablename__ = "auth_attempts"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    key = Column(String(191), nullable=False, index=True)
+    at = Column(DateTime, default=_now, index=True)

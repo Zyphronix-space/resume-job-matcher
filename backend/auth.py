@@ -52,16 +52,28 @@ def verify_password(password: str, password_hash: str, salt: str) -> bool:
     return secrets.compare_digest(candidate, password_hash)
 
 
-def create_access_token(user_id: int) -> str:
-    payload = {"sub": str(user_id), "exp": datetime.now(timezone.utc) + TOKEN_LIFETIME}
+def create_access_token(user: db_models.User) -> str:
+    payload = {
+        "sub": str(user.id),
+        "ver": user.token_version or 0,
+        "exp": datetime.now(timezone.utc) + TOKEN_LIFETIME,
+    }
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 
-def _decode_token(token: str) -> int:
+def revoke_sessions(user: db_models.User) -> None:
+    """Invalidate every token issued to this user so far. The caller commits
+    and, if the user should stay signed in, issues a fresh token after."""
+    user.token_version = (user.token_version or 0) + 1
+
+
+def _decode_token(token: str) -> tuple[int, int]:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return int(payload["sub"])
-    except (jwt.PyJWTError, KeyError, ValueError) as exc:
+        # Tokens issued before versioning existed have no "ver": they count
+        # as version 0, so current sessions survive this deploy.
+        return int(payload["sub"]), int(payload.get("ver", 0))
+    except (jwt.PyJWTError, KeyError, ValueError, TypeError) as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired session") from exc
 
 
@@ -71,11 +83,23 @@ def get_current_user(
 ) -> db_models.User:
     if credentials is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Sign in required")
-    user_id = _decode_token(credentials.credentials)
+    user_id, version = _decode_token(credentials.credentials)
     user = db.query(db_models.User).filter_by(id=user_id).first()
-    if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Sign in required")
+    if not user or version != (user.token_version or 0):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Your session has ended. Sign in again.")
     return user
+
+
+def get_optional_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
+    db: Session = Depends(get_db),
+) -> db_models.User | None:
+    """For routes that are public but can personalise for a signed-in
+    user (the job listings). A bad token is still an error, not silently
+    treated as anonymous."""
+    if credentials is None:
+        return None
+    return get_current_user(credentials, db)
 
 
 def get_current_admin(user: db_models.User = Depends(get_current_user)) -> db_models.User:

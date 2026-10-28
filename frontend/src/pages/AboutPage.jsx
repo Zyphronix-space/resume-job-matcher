@@ -6,14 +6,16 @@ export default function AboutPage() {
       </header>
       <div className="prose">
         <p>
-          ResumeMatch is a recruiting workspace built around one explainable matching pipeline. Sentence-embedding
+          ResumeMatch is a job-search workspace built around one explainable matching pipeline. Job seekers browse
+          real openings imported from employers’ own public job boards, check how their resume fits each one
+          requirement by requirement, prepare their application, and track it from saved to offer. Sentence-embedding
           similarity gives the overall match score, and a curated skills taxonomy finds matched and missing skills,
-          how important each one is, and where it appears in the resume. The same pipeline scores every candidate
-          against every job, so rankings, shortlists, and analytics all rest on the same numbers.
+          how important each one is, and where it appears in the resume.
         </p>
         <p>
-          Recruiters post jobs, review ranked candidates, leave notes, and move applications through a pipeline.
-          Candidates upload a resume, see how they match open roles, and track every application in one place.
+          It’s useful to a job seeker on its own, with no recruiter involved. Recruiters can also post roles here,
+          review the people who applied ranked by the same pipeline, and move applications through screening,
+          interview and offer. A recruiter only ever sees candidates who applied to their roles.
         </p>
         <p>
           It’s an independent student portfolio project by Stephan Wasalathanthrige, not a registered company.

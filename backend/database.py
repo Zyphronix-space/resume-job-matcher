@@ -84,6 +84,39 @@ def add_missing_columns() -> None:
                 conn.execute(text(f"ALTER TABLE {quote(table.name)} ADD COLUMN {quote(column.name)} {col_type}"))
 
 
+# MySQL/TiDB error codes for "already exists": table, column, index.
+_ALREADY_EXISTS = {1050, 1060, 1061}
+
+
+def _already_exists(exc: Exception) -> bool:
+    if "already exists" in str(exc).lower():  # SQLite's wording
+        return True
+    orig = getattr(exc, "orig", None)
+    args = getattr(orig, "args", ())
+    return bool(args) and args[0] in _ALREADY_EXISTS
+
+
+def init_schema(attempts: int = 5) -> None:
+    """
+    Create missing tables and columns. Safe to run from many instances at
+    once: each step checks first, but two serverless instances cold-starting
+    together can both see a table as missing and both try to create it. The
+    one that loses gets an "already exists" error; it simply runs the check
+    again, which now finds nothing to do. Nothing here drops or alters an
+    existing column.
+    """
+    from sqlalchemy.exc import DatabaseError
+
+    for attempt in range(attempts):
+        try:
+            Base.metadata.create_all(bind=engine)
+            add_missing_columns()
+            return
+        except DatabaseError as exc:
+            if not _already_exists(exc) or attempt == attempts - 1:
+                raise
+
+
 def get_db():
     db = SessionLocal()
     try:

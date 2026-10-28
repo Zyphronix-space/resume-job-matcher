@@ -90,7 +90,11 @@ export async function changePassword(currentPassword, newPassword) {
     body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
   })
   if (!res.ok) await parseErrorOrThrow(res, 'Could not change password')
-  return res.json()
+  const data = await res.json()
+  // Changing the password ends every existing session, this one included;
+  // keep this browser signed in with the fresh token, in the same storage.
+  if (data.access_token) setToken(data.access_token, Boolean(localStorage.getItem(TOKEN_KEY)))
+  return data
 }
 
 export async function forgotPassword(email) {

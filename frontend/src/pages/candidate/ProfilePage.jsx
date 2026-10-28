@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import GlassCard from '../../components/glass/GlassCard.jsx'
 import PageHeader from '../../components/PageHeader.jsx'
 import ProfileForm from '../../components/ProfileForm.jsx'
+import CandidateProfileEditor from '../../components/CandidateProfileEditor.jsx'
 import { skillLabel } from '../../utils/skillLabel.js'
 import { listResumes } from '../../utils/resumes.js'
 
@@ -15,16 +16,20 @@ export default function ProfilePage() {
 
   return (
     <>
-      <PageHeader title="Profile" description="Recruiters see these details next to your applications." />
+      <PageHeader title="Profile" description="Your contact details, and the reviewed background your fit checks and drafts are built from." />
 
       <div className="stack">
-        <GlassCard title="Details">
+        <GlassCard title="Background" subtitle="Experience, projects and skills, checked by you.">
+          <CandidateProfileEditor />
+        </GlassCard>
+
+        <GlassCard title="Contact details" subtitle="Shown to a recruiter only when you apply to a role they posted on ResumeMatch.">
           <ProfileForm headlinePlaceholder="e.g. Final-year CS student, backend focus" />
         </GlassCard>
 
         <GlassCard
-          title="Skills"
-          subtitle={activeResume ? `Detected in ${activeResume.filename}. Upload a new resume to update them.` : 'Detected from your active resume.'}
+          title="Skills detected in your resume"
+          subtitle={activeResume ? `Read from ${activeResume.filename}. Upload a new resume to update them.` : 'Read from your active resume.'}
         >
           {activeResume === undefined ? null : activeResume?.cv_skills?.length ? (
             <ul className="tag-list">
