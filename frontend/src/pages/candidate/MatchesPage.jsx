@@ -38,8 +38,8 @@ export default function MatchesPage() {
   return (
     <>
       <PageHeader
-        title="Matches"
-        description="Open roles ranked by how closely your active resume matches each job description."
+        title="Roles posted here"
+        description="Jobs recruiters posted directly on ResumeMatch, ranked against your active resume. Applying here shares your resume with that recruiter."
       />
 
       {error && <p className="field-error" role="alert"><WarningIcon size={15} />{error}</p>}
@@ -47,9 +47,9 @@ export default function MatchesPage() {
 
       {matches && matches.length === 0 && (
         <GlassEmptyState
-          title="No matches yet"
-          subtitle="Matches appear once you have an active resume and recruiters have open roles."
-          action={<GlassButton as={Link} variant="primary" to="/resumes">Go to resumes</GlassButton>}
+          title="No roles posted here yet"
+          subtitle="Recruiters haven’t opened roles on ResumeMatch directly. Real openings from employer job boards are on the Jobs page."
+          action={<GlassButton as={Link} variant="primary" to="/openings">Browse jobs</GlassButton>}
         />
       )}
 

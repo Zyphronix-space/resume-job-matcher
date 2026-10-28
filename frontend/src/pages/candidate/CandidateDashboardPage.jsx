@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import GlassCard from '../../components/glass/GlassCard.jsx'
 import GlassButton from '../../components/glass/GlassButton.jsx'
@@ -6,87 +6,73 @@ import GlassBadge from '../../components/glass/GlassBadge.jsx'
 import GlassEmptyState from '../../components/glass/GlassEmptyState.jsx'
 import GlassMetric, { GlassMetricGrid } from '../../components/glass/GlassMetric.jsx'
 import PageHeader from '../../components/PageHeader.jsx'
-import ScoreMeter from '../../components/ScoreMeter.jsx'
 import LoadingBlock from '../../components/LoadingBlock.jsx'
-import { DocumentIcon, WarningIcon } from '../../components/icons.jsx'
+import { BriefcaseIcon, DocumentIcon, UserIcon, WarningIcon } from '../../components/icons.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
-import { getCandidateMatches, listMyApplications } from '../../utils/applications.js'
+import { listMyApplications } from '../../utils/applications.js'
 import { listResumes } from '../../utils/resumes.js'
+import { formatDate, getCandidateProfile, getTrackerSummary, postingFacts, searchPostings } from '../../utils/workspace.js'
 
-// The panel at the top answers "what should I do next?" from real state:
-// no resume yet, a resume but nothing applied to, or applications in flight.
-function NextStep({ activeResume, matches, applications }) {
-  if (!activeResume) {
-    return (
-      <section className="next-step" aria-labelledby="next-step-title">
-        <span className="next-step-icon"><DocumentIcon size={20} /></span>
-        <div className="next-step-text">
-          <h2 id="next-step-title">Start with your resume</h2>
-          <p>Upload a PDF and every open role will be ranked against it, with the skills you have and the ones you’re missing.</p>
-        </div>
-        <GlassButton as={Link} to="/resumes" variant="primary">Upload resume</GlassButton>
-      </section>
-    )
-  }
+// "What should I do next?", answered from real state in a fixed order:
+// resume, reviewed profile, a first saved job, then follow-ups that are due.
+function NextStep({ activeResume, profile, summary }) {
+  const overdue = summary.follow_ups.filter((f) => f.overdue)
+  const step = !activeResume ? {
+    Icon: DocumentIcon, title: 'Start with your resume',
+    body: 'Upload a PDF. Every job you look at can then be checked against it, requirement by requirement.',
+    action: <GlassButton as={Link} to="/resumes" variant="primary">Upload resume</GlassButton>,
+  } : !profile.confirmed ? {
+    Icon: UserIcon, title: 'Check what was read from your resume',
+    body: 'Review the experience, projects and skills taken from your resume. Your drafts only use what you confirm.',
+    action: <GlassButton as={Link} to="/profile" variant="primary">Review profile</GlassButton>,
+  } : summary.total === 0 ? {
+    Icon: BriefcaseIcon, title: 'Save your first job',
+    body: 'Browse real openings or paste one you found elsewhere. Saved jobs get a fit check, drafts and interview prep.',
+    action: <GlassButton as={Link} to="/openings" variant="primary">Browse jobs</GlassButton>,
+  } : overdue.length > 0 ? {
+    Icon: WarningIcon, title: `${overdue.length} follow-up${overdue.length === 1 ? ' is' : 's are'} overdue`,
+    body: `Starting with ${overdue[0].title}${overdue[0].company ? ` at ${overdue[0].company}` : ''}.`,
+    action: <GlassButton as={Link} to={`/tracker/${overdue[0].id}`} variant="primary">Open it</GlassButton>,
+  } : null
 
-  const best = matches.find((m) => !m.already_applied)
-  if (best) {
-    return (
-      <section className="next-step" aria-labelledby="next-step-title">
-        <div className="next-step-text">
-          <h2 id="next-step-title">Your strongest open match: {best.job.title}</h2>
-          <p>
-            Scored against {activeResume.filename}. Check the missing skills before you apply.
-          </p>
-        </div>
-        <ScoreMeter score={best.match_score} />
-        <GlassButton as={Link} to="/matches" variant="primary">Review matches</GlassButton>
-      </section>
-    )
-  }
-
-  if (applications.length === 0) {
-    return (
-      <section className="next-step" aria-labelledby="next-step-title">
-        <div className="next-step-text">
-          <h2 id="next-step-title">No open roles right now</h2>
-          <p>Your resume is ready. Matches will appear here as soon as recruiters open new jobs.</p>
-        </div>
-      </section>
-    )
-  }
-
-  return null
+  if (!step) return null
+  return (
+    <section className="next-step" aria-labelledby="next-step-title">
+      <span className="next-step-icon"><step.Icon size={20} /></span>
+      <div className="next-step-text">
+        <h2 id="next-step-title">{step.title}</h2>
+        <p>{step.body}</p>
+      </div>
+      {step.action}
+    </section>
+  )
 }
 
 export default function CandidateDashboardPage() {
   const { user } = useAuth()
   const [data, setData] = useState(null)
+  const [jobs, setJobs] = useState(null)
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    Promise.all([listMyApplications(), getCandidateMatches(), listResumes()])
-      .then(([applications, matches, resumes]) => setData({
-        applications,
-        matches,
-        activeResume: resumes.find((r) => r.is_active) || null,
+    Promise.all([listResumes(), getCandidateProfile(), getTrackerSummary(), listMyApplications()])
+      .then(([resumes, profile, summary, applications]) => setData({
+        activeResume: resumes.find((r) => r.is_active) || null, profile, summary, applications,
       }))
       .catch((err) => setError(err.message))
+    searchPostings({ open_to_sri_lanka: 'true', level: 'Internship,Graduate,Junior', sort: 'skills', limit: 5 })
+      .then(setJobs)
+      .catch(() => setJobs({ results: [], total: 0 }))
   }, [])
 
-  const counts = useMemo(() => {
-    if (!data) return null
-    const by = (status) => data.applications.filter((a) => a.status === status).length
-    return { total: data.applications.length, shortlisted: by('Shortlisted'), interview: by('Interview'), offer: by('Offer') }
-  }, [data])
-
   const firstName = user.full_name ? user.full_name.split(' ')[0] : null
+  const by = data?.summary.by_stage || {}
 
   return (
     <>
       <PageHeader
         title={firstName ? `Welcome back, ${firstName}` : 'Welcome back'}
-        description="Your matches and applications."
+        description="Your job search: what to do next, what’s due, and openings worth a look."
       />
 
       {error && <p className="field-error" role="alert"><WarningIcon size={15} />{error}</p>}
@@ -96,61 +82,95 @@ export default function CandidateDashboardPage() {
         <div className="stack">
           <NextStep {...data} />
 
-          {counts.total > 0 && (
+          {data.summary.total > 0 && (
             <GlassMetricGrid>
-              <GlassMetric label="Applications" value={counts.total} />
-              <GlassMetric label="Shortlisted" value={counts.shortlisted} />
-              <GlassMetric label="Interviewing" value={counts.interview} />
-              <GlassMetric label="Offers" value={counts.offer} />
+              <GlassMetric label="Saved or preparing" value={(by.Saved || 0) + (by.Preparing || 0)} />
+              <GlassMetric label="Applied" value={(by.Applied || 0) + (by.Assessment || 0)} />
+              <GlassMetric label="Interviewing" value={by.Interview || 0} />
+              <GlassMetric label="Offers" value={by.Offer || 0} />
             </GlassMetricGrid>
+          )}
+
+          {data.summary.expired_saved.length > 0 && (
+            <p className="form-alert is-warning" role="status">
+              <WarningIcon size={15} />
+              {data.summary.expired_saved.length === 1
+                ? `“${data.summary.expired_saved[0].title}” is no longer listed by the employer.`
+                : `${data.summary.expired_saved.length} jobs you saved are no longer listed by their employers.`}
+              {' '}<Link className="text-link" to={`/tracker/${data.summary.expired_saved[0].id}`}>Check it</Link>
+            </p>
           )}
 
           <div className="split">
             <GlassCard
-              title="Top matches"
-              actions={data.matches.length > 0 && <Link to="/matches" className="text-link">View all</Link>}
+              title="Follow-ups"
+              subtitle="Due in the next two weeks."
+              actions={data.summary.total > 0 && <Link to="/tracker" className="text-link">Tracker</Link>}
             >
-              {data.matches.length === 0 ? (
+              {data.summary.follow_ups.length === 0 ? (
                 <GlassEmptyState
-                  title="No matches yet"
-                  subtitle={data.activeResume ? 'There are no open roles to compare against yet.' : 'Upload a resume to see how you match open roles.'}
+                  title="Nothing due"
+                  subtitle={data.summary.total > 0 ? 'Set a follow-up date on a tracked job and it shows up here.' : 'Track a job to plan follow-ups.'}
                 />
               ) : (
                 <ul className="row-list">
-                  {data.matches.slice(0, 5).map((m) => (
-                    <li className="row-list-item" key={m.job.id}>
+                  {data.summary.follow_ups.slice(0, 6).map((f) => (
+                    <li className="row-list-item" key={f.id}>
                       <div className="row-list-main">
-                        <span className="row-list-title">{m.job.title}</span>
-                        <span className="row-list-meta">
-                          {m.matched_skills.length} of {m.matched_skills.length + m.missing_skills.length} skills found
-                        </span>
+                        <Link to={`/tracker/${f.id}`} className="row-list-title">{f.title}</Link>
+                        <span className="row-list-meta">{f.company || 'No company'} · {f.stage}</span>
                       </div>
-                      {m.already_applied && <GlassBadge status={m.application_status} />}
-                      <ScoreMeter score={m.match_score} />
+                      <GlassBadge variant={f.overdue ? 'danger' : 'neutral'}>
+                        {f.overdue ? 'Overdue' : formatDate(f.next_follow_up)}
+                      </GlassBadge>
                     </li>
                   ))}
                 </ul>
               )}
             </GlassCard>
 
-            <GlassCard title="Applications">
-              {data.applications.length === 0 ? (
-                <GlassEmptyState title="No applications yet" subtitle="When you apply to a role, its status shows up here." />
-              ) : (
+            <GlassCard
+              title="Openings worth a look"
+              subtitle={data.activeResume ? 'Early-career roles open to Sri Lanka, most skills in common first.' : 'Early-career roles open to applicants in Sri Lanka.'}
+              actions={<Link to="/openings" className="text-link">All jobs</Link>}
+            >
+              {!jobs && <LoadingBlock rows={2} label="Loading jobs" />}
+              {jobs && jobs.results.length === 0 && (
+                <GlassEmptyState title="No matching openings right now" subtitle="Browse all jobs or widen the filters." />
+              )}
+              {jobs && jobs.results.length > 0 && (
                 <ul className="row-list">
-                  {data.applications.slice(0, 5).map((a) => (
-                    <li className="row-list-item" key={a.id}>
+                  {jobs.results.map((p) => (
+                    <li className="row-list-item" key={p.id}>
                       <div className="row-list-main">
-                        <span className="row-list-title">{a.job.title}</span>
-                        <span className="row-list-meta">Applied {new Date(a.created_at).toLocaleDateString()}</span>
+                        <Link to={`/openings/${p.id}`} className="row-list-title">{p.title}</Link>
+                        <span className="row-list-meta">{[p.company, ...postingFacts(p).slice(0, 2)].join(' · ')}</span>
                       </div>
-                      <GlassBadge status={a.status} />
+                      {p.skill_overlap && (
+                        <span className="row-list-meta is-fixed num">{p.skill_overlap.found}/{p.skill_overlap.total} skills</span>
+                      )}
                     </li>
                   ))}
                 </ul>
               )}
             </GlassCard>
           </div>
+
+          {data.applications.length > 0 && (
+            <GlassCard title="Applications sent through ResumeMatch" subtitle="Roles a recruiter posted here directly, and their status.">
+              <ul className="row-list">
+                {data.applications.slice(0, 5).map((a) => (
+                  <li className="row-list-item" key={a.id}>
+                    <div className="row-list-main">
+                      <span className="row-list-title">{a.job.title}</span>
+                      <span className="row-list-meta">Applied {formatDate(a.created_at)}</span>
+                    </div>
+                    <GlassBadge status={a.status} />
+                  </li>
+                ))}
+              </ul>
+            </GlassCard>
+          )}
         </div>
       )}
     </>

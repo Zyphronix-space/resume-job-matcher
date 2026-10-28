@@ -68,6 +68,7 @@
 
   --sidebar-width: 232px;
   --content-max: 1080px;
+  --app-content-max: none; /* signed-in workspace fills the screen; long text keeps its own line-length caps */
   --ease: cubic-bezier(0.2, 0, 0, 1);
 }
 

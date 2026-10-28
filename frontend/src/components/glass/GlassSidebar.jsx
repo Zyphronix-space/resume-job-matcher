@@ -9,8 +9,8 @@ export default function GlassSidebar({ links, footer, homeTo = '/' }) {
       </Link>
 
       <nav className="glass-sidebar-nav" aria-label="Main">
-        {links.map(({ to, label, Icon }) => (
-          <NavLink key={to} to={to} className={({ isActive }) => `glass-sidebar-link ${isActive ? 'is-active' : ''}`}>
+        {links.map(({ to, label, Icon, end }) => (
+          <NavLink key={to} to={to} end={end} className={({ isActive }) => `glass-sidebar-link ${isActive ? 'is-active' : ''}`}>
             <Icon size={18} />
             <span>{label}</span>
           </NavLink>

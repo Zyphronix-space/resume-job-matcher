@@ -15,6 +15,7 @@ export default function PublicLayout() {
             <Wordmark />
           </Link>
           <nav className="public-nav" aria-label="Main">
+            <NavLink to="/openings" className="public-nav-link">Jobs</NavLink>
             <NavLink to="/features" className="public-nav-link">How it works</NavLink>
             <NavLink to="/about" className="public-nav-link">About</NavLink>
             {homeLink ? (

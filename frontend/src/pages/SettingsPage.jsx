@@ -8,11 +8,30 @@ import ProfileForm from '../components/ProfileForm.jsx'
 import { WarningIcon } from '../components/icons.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { changePassword } from '../utils/auth.js'
+import { deleteAccount } from '../utils/workspace.js'
 import { MIN_PASSWORD_LENGTH, validateNewPassword, validatePasswordConfirmation } from '../utils/validation.js'
 
 export default function SettingsPage() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const showToast = useToast()
+  const [deletePassword, setDeletePassword] = useState('')
+  const [deleteError, setDeleteError] = useState(null)
+  const [deleting, setDeleting] = useState(false)
+
+  const removeAccount = async (e) => {
+    e.preventDefault()
+    setDeleteError(null)
+    if (!deletePassword) { setDeleteError('Enter your password to confirm.'); return }
+    if (!window.confirm('Permanently delete your account and all of its data? This can’t be undone.')) return
+    setDeleting(true)
+    try {
+      await deleteAccount(deletePassword)
+      logout()
+    } catch (err) {
+      setDeleteError(err.message)
+      setDeleting(false)
+    }
+  }
 
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -78,6 +97,24 @@ export default function SettingsPage() {
             <div className="form-actions">
               {passwordError && <p className="field-error" role="alert"><WarningIcon size={15} />{passwordError}</p>}
               <GlassButton type="submit" variant="primary" loading={saving} loadingText="Changing…">Change password</GlassButton>
+            </div>
+          </form>
+        </GlassCard>
+
+        <GlassCard
+          title="Delete account"
+          subtitle={user.role === 'recruiter'
+            ? 'Deletes your account, the jobs you posted and everything attached to them.'
+            : 'Deletes your account, every resume you uploaded, your profile, tracker, drafts and applications.'}
+        >
+          <form onSubmit={removeAccount} className="form-grid narrow" noValidate>
+            <PasswordInput
+              label="Confirm with your password" autoComplete="current-password"
+              value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)}
+            />
+            <div className="form-actions">
+              {deleteError && <p className="field-error" role="alert"><WarningIcon size={15} />{deleteError}</p>}
+              <GlassButton type="submit" variant="danger" loading={deleting} loadingText="Deleting…">Delete my account</GlassButton>
             </div>
           </form>
         </GlassCard>

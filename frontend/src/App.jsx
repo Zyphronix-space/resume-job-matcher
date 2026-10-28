@@ -4,6 +4,7 @@ import './App.css'
 import PublicLayout from './layouts/PublicLayout.jsx'
 import AppLayout from './layouts/AppLayout.jsx'
 import AuthLayout from './layouts/AuthLayout.jsx'
+import AdaptiveLayout from './layouts/AdaptiveLayout.jsx'
 import { RedirectIfAuthed, RequireAdmin, RequireAuth, RequireRole } from './routes/Guards.jsx'
 
 import LandingPage from './pages/LandingPage.jsx'
@@ -30,9 +31,15 @@ import CandidateDashboardPage from './pages/candidate/CandidateDashboardPage.jsx
 import ProfilePage from './pages/candidate/ProfilePage.jsx'
 import ResumesPage from './pages/candidate/ResumesPage.jsx'
 import MatchesPage from './pages/candidate/MatchesPage.jsx'
+import TrackerPage from './pages/candidate/TrackerPage.jsx'
+import TrackedJobPage from './pages/candidate/TrackedJobPage.jsx'
+
+import JobsPage from './pages/jobs/JobsPage.jsx'
+import JobPostingPage from './pages/jobs/JobPostingPage.jsx'
 
 import SettingsPage from './pages/SettingsPage.jsx'
 import AdminPage from './pages/AdminPage.jsx'
+import AdminSourcesPage from './pages/AdminSourcesPage.jsx'
 
 export default function App() {
   return (
@@ -43,6 +50,12 @@ export default function App() {
         <Route path="/features" element={<FeaturesPage />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route path="/terms" element={<TermsPage />} />
+      </Route>
+
+      {/* The job index is public, so visitors see real value before signing up. */}
+      <Route element={<AdaptiveLayout />}>
+        <Route path="/openings" element={<JobsPage />} />
+        <Route path="/openings/:postingId" element={<JobPostingPage />} />
       </Route>
 
       <Route element={<AuthLayout />}>
@@ -71,12 +84,15 @@ export default function App() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/resumes" element={<ResumesPage />} />
             <Route path="/matches" element={<MatchesPage />} />
+            <Route path="/tracker" element={<TrackerPage />} />
+            <Route path="/tracker/:trackedId" element={<TrackedJobPage />} />
           </Route>
 
           <Route path="/settings" element={<SettingsPage />} />
 
           <Route element={<RequireAdmin />}>
             <Route path="/admin" element={<AdminPage />} />
+            <Route path="/admin/sources" element={<AdminSourcesPage />} />
           </Route>
         </Route>
       </Route>
