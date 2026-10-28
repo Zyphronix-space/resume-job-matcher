@@ -29,11 +29,32 @@ from database import Base, engine
 from main import app
 
 
+_schema_ready = False
+
+
 @pytest.fixture(autouse=True)
 def clean_db():
-    """Every test starts against a completely empty schema."""
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    """Every test starts against an empty schema. On SQLite the schema is
+    dropped and recreated each time; on a remote TiDB test database that DDL
+    takes seconds per test, so the schema is rebuilt once and every table is
+    emptied between tests instead (rebuilt again if a test changed it)."""
+    global _schema_ready
+    if not _test_db_url:
+        Base.metadata.drop_all(bind=engine)
+        Base.metadata.create_all(bind=engine)
+        yield
+        return
+    from database import init_schema
+    from sqlalchemy import inspect as sa_inspect
+    if not _schema_ready:
+        Base.metadata.drop_all(bind=engine)
+        _schema_ready = True
+    init_schema()
+    with engine.begin() as conn:
+        present = set(sa_inspect(conn).get_table_names())
+        for table in reversed(Base.metadata.sorted_tables):
+            if table.name in present:
+                conn.execute(table.delete())
     yield
 
 

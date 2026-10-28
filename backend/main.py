@@ -64,9 +64,14 @@ app = FastAPI(title="RecruitAI API")
 # from ALLOWED_ORIGINS (comma-separated) so the deployed Static Web App URL
 # doesn't need to be hardcoded here.
 _extra_origins = [o.strip() for o in os.environ.get("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+# ALLOWED_ORIGIN_REGEX is for preview deployments only, whose frontend URL
+# isn't known before the backend is deployed, e.g.
+# ^https://resume-match-stephan-[a-z0-9]+-vinucare1\.vercel\.app$
+# Production doesn't set it.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5174", "http://localhost:5173", *_extra_origins],
+    allow_origin_regex=os.environ.get("ALLOWED_ORIGIN_REGEX") or None,
     allow_methods=["*"],
     allow_headers=["*"],
 )
