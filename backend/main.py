@@ -45,7 +45,7 @@ from admin_sources_routes import cron_router, router as admin_sources_router
 from analytics_routes import router as analytics_router
 from applications_routes import router as applications_router
 from auth import get_current_user
-from database import Base, add_missing_columns, engine
+from database import init_schema
 from job_matcher import match_single
 from jobs_routes import router as jobs_router
 from postings_routes import router as postings_router
@@ -56,8 +56,7 @@ from routes_admin import router as admin_router
 from routes_auth import router as auth_router
 from tracker_routes import router as tracker_router
 
-Base.metadata.create_all(bind=engine)
-add_missing_columns()
+init_schema()
 
 app = FastAPI(title="RecruitAI API")
 
